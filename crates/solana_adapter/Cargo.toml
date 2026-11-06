@@ -1,0 +1,18 @@
+[package]
+name = "arrhabon-solana-adapter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+arrhabon-app.workspace = true
+arrhabon-domain.workspace = true
+arrhabon.workspace = true
+anchor-client.workspace = true
+anchor-lang.workspace = true
+anchor-spl.workspace = true
+bincode.workspace = true
+solana-keypair.workspace = true
+tokio.workspace = true
+bs58.workspace = true
