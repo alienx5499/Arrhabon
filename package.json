@@ -1,0 +1,9 @@
+{
+  "name": "arrhabon",
+  "private": true,
+  "scripts": {
+    "dev": "bun scripts/dev.ts",
+    "dev:api": "set -a; [ -f .env ] && . ./.env; set +a; cargo run -p arrhabon-api",
+    "dev:web": "cd web && bun run dev -- -p 3000"
+  }
+}

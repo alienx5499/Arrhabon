@@ -1,0 +1,49 @@
+# Render Blueprint for the Arrhabon API (see docs/DEPLOY.md).
+# No secret values live here: every secret is `sync: false` (set in the dashboard),
+# and the two keypairs are Render secret files mounted under /etc/secrets/.
+services:
+  - type: web
+    name: arrhabon-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Paid plan on purpose: the free tier sleeps when idle, and a sleeping service
+    # stops the refund crank (expired vaults would wait until the next request).
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      # PORT is injected by Render; the server reads it, so it is not set here.
+      - key: HOST
+        value: 0.0.0.0
+      - key: ARRHABON_CLUSTER
+        value: devnet
+      # Optional private devnet RPC (e.g. Helius, carries an API key). Leave blank for the public devnet endpoint.
+      - key: SOLANA_RPC_URL
+        sync: false
+      # Exact Vercel origin, no trailing slash.
+      - key: WEB_ORIGIN
+        value: https://arrhabon.vercel.app
+      - key: CRANK
+        value: "true"
+      - key: CRANK_INTERVAL_SECS
+        value: "10"
+      # Secret file "crank.json" (Environment > Secret Files). Needs devnet SOL for fees.
+      - key: CRANK_KEYPAIR
+        value: /etc/secrets/crank.json
+      # Devnet demo only: true lets anyone call POST /demo/attest for vaults naming the
+      # demo attestor, so visitors can try both outcomes. Turn off for real money.
+      - key: DEMO_ATTESTOR
+        value: "true"
+      # Secret file "attestor.json"; read only when DEMO_ATTESTOR=true.
+      - key: DEMO_ATTESTOR_KEYPAIR
+        value: /etc/secrets/attestor.json
+      # Optional: unset uses NEAR 1Click for dry quotes.
+      - key: AURORA_API_KEY
+        sync: false
+      - key: ONECLICK_JWT
+        sync: false
+      - key: AURORA_LIVE
+        value: "false"
+      - key: RUST_LOG
+        value: info
