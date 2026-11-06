@@ -1,0 +1,11 @@
+target
+.keys
+.env
+.env.*
+.anchor
+test-ledger
+web
+node_modules
+deploy
+docs
+**/.DS_Store

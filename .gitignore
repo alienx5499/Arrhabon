@@ -1,0 +1,23 @@
+# secrets: project keypairs and env files
+.keys/
+*-keypair.json
+.env*
+!.env.example
+
+# build output (target/ holds deploy/*.so and keypairs)
+target/
+.anchor/
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+
+# local validator state
+test-ledger/
+.localnet/
+deploy/localnet.json
+
+# misc
+.DS_Store
+*.log
