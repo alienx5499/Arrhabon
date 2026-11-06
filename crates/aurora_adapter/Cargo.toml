@@ -1,0 +1,22 @@
+[package]
+name = "arrhabon-aurora-adapter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+# Exposes `AuroraConfig::with_live` for integration tests.
+testing = []
+
+[dependencies]
+arrhabon-app.workspace = true
+arrhabon-domain.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+arrhabon-aurora-adapter = { workspace = true, features = ["testing"] }
+tokio.workspace = true
+wiremock.workspace = true
