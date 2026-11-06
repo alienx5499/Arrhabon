@@ -1,0 +1,14 @@
+[package]
+name = "arrhabon-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+arrhabon-domain.workspace = true
+thiserror.workspace = true
+bs58.workspace = true
+
+[features]
+fakes = []
