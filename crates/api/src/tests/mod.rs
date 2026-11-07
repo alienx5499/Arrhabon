@@ -3,6 +3,7 @@
 mod crank;
 mod faucet;
 mod funding;
+mod mirror;
 mod registry;
 mod routes;
 
@@ -65,6 +66,8 @@ pub fn state(chain: bool, attestor: Option<AccountId>) -> AppState<TestPorts> {
         faucet_on: false,
         faucet: OnceLock::new(),
         faucet_claims: Default::default(),
+        aurora_live: false,
+        mirror: Default::default(),
         cluster: "devnet",
     }))
 }
@@ -76,6 +79,18 @@ pub fn faucet_state(faucet: FakeFaucet) -> AppState<TestPorts> {
     let _ = inner.faucet.set(faucet);
     AppState(Arc::new(Inner {
         faucet_on: true,
+        ..inner
+    }))
+}
+
+/// A chain-ready state with the DEMO faucet and mirror config, backed by `faucet`.
+pub fn mirror_state(faucet: FakeFaucet, aurora_live: bool) -> AppState<TestPorts> {
+    let s = state(true, None);
+    let inner = Arc::into_inner(s.0).expect("fresh state has one owner");
+    let _ = inner.faucet.set(faucet);
+    AppState(Arc::new(Inner {
+        faucet_on: true,
+        aurora_live,
         ..inner
     }))
 }

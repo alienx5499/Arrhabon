@@ -54,6 +54,12 @@ pub enum AppError {
     /// The wallet already holds enough SOL and test USDC; the faucet sends nothing.
     #[error("wallet already funded")]
     AlreadyFunded,
+    /// A live swap is still waiting for deposit or confirmation on mainnet.
+    #[error("swap pending")]
+    SwapPending,
+    /// A live swap did not settle (refunded or failed on mainnet).
+    #[error("swap not settled")]
+    SwapNotSettled,
     /// Refused without a program error code (e.g. by the swap service).
     #[error("rejected: {0}")]
     Rejected(String),

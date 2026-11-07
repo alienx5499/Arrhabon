@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isFinalStatus, percentToBps, swapStatusMessage } from "./quote";
+import {
+  isFinalStatus,
+  mirrorErrorMessage,
+  mirrorSuccessMessage,
+  percentToBps,
+  swapStatusMessage,
+} from "./quote";
 
 describe("swapStatusMessage", () => {
   it("maps every status value to a sentence", () => {
@@ -32,6 +38,39 @@ describe("percentToBps", () => {
     expect(percentToBps("101")).toBeNull();
     expect(percentToBps("0.001")).toBeNull();
     expect(percentToBps("abc")).toBeNull();
+  });
+});
+
+describe("mirrorErrorMessage", () => {
+  it("maps every new error code to a plain sentence", () => {
+    expect(mirrorErrorMessage("swap_pending")).toBe(
+      "Swap is still pending on mainnet. Please wait for confirmation.",
+    );
+    expect(mirrorErrorMessage("swap_not_settled")).toBe(
+      "Swap did not settle on mainnet (refunded or failed).",
+    );
+    expect(mirrorErrorMessage("unknown_deposit")).toBe(
+      "Deposit address was not recognized for this session.",
+    );
+    expect(mirrorErrorMessage("already_mirrored")).toBe(
+      "This swap was already mirrored to devnet test USDC.",
+    );
+    expect(mirrorErrorMessage("mirror_disabled")).toBe("Devnet mirror is disabled.");
+    expect(mirrorErrorMessage("other")).toBe("Could not mirror swap to devnet test USDC.");
+  });
+});
+
+describe("mirrorSuccessMessage", () => {
+  it("formats micro units correctly", () => {
+    expect(mirrorSuccessMessage("100000000")).toBe(
+      "Swap complete. 100.00 test USDC mirrored to your devnet wallet for this vault (devnet test money; the swap itself was real on mainnet).",
+    );
+    expect(mirrorSuccessMessage("5000000")).toBe(
+      "Swap complete. 5.00 test USDC mirrored to your devnet wallet for this vault (devnet test money; the swap itself was real on mainnet).",
+    );
+    expect(mirrorSuccessMessage(25500000)).toBe(
+      "Swap complete. 25.50 test USDC mirrored to your devnet wallet for this vault (devnet test money; the swap itself was real on mainnet).",
+    );
   });
 });
 

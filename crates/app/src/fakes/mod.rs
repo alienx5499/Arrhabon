@@ -113,12 +113,16 @@ impl SwapQuoter for FakeQuoter {
 pub struct FakeFaucet {
     balances: Arc<Mutex<HashMap<AccountId, WalletFunds>>>,
     sent: Arc<Mutex<Vec<(AccountId, u64, Usdc)>>>,
+    failing: Arc<Mutex<bool>>,
 }
 
 impl FakeFaucet {
     pub fn set(&self, wallet: AccountId, lamports: u64, usdc: Usdc) {
         let mut b = self.balances.lock().expect("fake faucet lock poisoned");
         b.insert(wallet, WalletFunds { lamports, usdc });
+    }
+    pub fn set_failing(&self, failing: bool) {
+        *self.failing.lock().expect("fake faucet lock poisoned") = failing;
     }
     pub fn sent(&self) -> Vec<(AccountId, u64, Usdc)> {
         self.sent.lock().expect("fake faucet lock poisoned").clone()
@@ -135,6 +139,9 @@ impl TestFunds for FakeFaucet {
     }
 
     async fn send(&self, wallet: AccountId, lamports: u64, usdc: Usdc) -> PortResult<TxSignature> {
+        if *self.failing.lock().expect("fake faucet lock poisoned") {
+            return Err(PortError::Unavailable("send failed".into()));
+        }
         let mut b = self.balances.lock().expect("fake faucet lock poisoned");
         let e = b.entry(wallet).or_insert(WalletFunds {
             lamports: 0,

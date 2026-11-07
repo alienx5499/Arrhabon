@@ -11,7 +11,6 @@ use axum::extract::{DefaultBodyLimit, Path, State};
 use axum::http::{HeaderValue, Method, StatusCode, header};
 use axum::routing::{get, post};
 use axum::{BoxError, Json, Router};
-use serde::Deserialize;
 use serde_json::{Value, json};
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
@@ -71,6 +70,15 @@ pub fn router<P: Ports>(state: AppState<P>, web_origin: HeaderValue) -> Router {
         )
         .route("/funding/quote", post(quote::<P>))
         .route("/funding/status", get(funding_status::<P>))
+        .route(
+            "/funding/mirror",
+            post(crate::mirror::mirror_swap::<P>).layer(
+                ServiceBuilder::new()
+                    .layer(HandleErrorLayer::new(submit_overloaded))
+                    .timeout(SUBMIT_TIMEOUT)
+                    .concurrency_limit(FAUCET_CONCURRENCY),
+            ),
+        )
         .fallback(not_found)
         .layer(DefaultBodyLimit::max(BODY_LIMIT))
         .layer(cors)
@@ -131,21 +139,9 @@ async fn university_proof<P: Ports>(State(s): State<AppState<P>>, Path(id): Path
     Ok(Json(proofs.iter().map(dto::university_proof).collect()))
 }
 
-#[derive(Deserialize)]
-struct CreateVaultBody {
-    student: String,
-    university: String,
-    attestor: String,
-    /// USDC micro-units.
-    target: u64,
-    /// Unix seconds.
-    deadline: i64,
-    nonce: u64,
-}
-
 async fn create_vault<P: Ports>(
     State(s): State<AppState<P>>,
-    Body(b): Body<CreateVaultBody>,
+    Body(b): Body<dto::CreateVaultBody>,
 ) -> Res {
     let built = CreateVault {
         student: dto::account(&b.student)?,
@@ -162,17 +158,10 @@ async fn create_vault<P: Ports>(
     Ok(Json(out))
 }
 
-#[derive(Deserialize)]
-struct ContributeBody {
-    funder: String,
-    /// USDC micro-units.
-    amount: u64,
-}
-
 async fn contribute<P: Ports>(
     State(s): State<AppState<P>>,
     Path(id): Path<String>,
-    Body(b): Body<ContributeBody>,
+    Body(b): Body<dto::ContributeBody>,
 ) -> Res {
     let tx = Contribute {
         vault: dto::account(&id)?,
@@ -184,13 +173,7 @@ async fn contribute<P: Ports>(
     Ok(Json(dto::unsigned_tx(&tx)))
 }
 
-#[derive(Deserialize)]
-struct SubmitBody {
-    /// Base64 of the wallet-signed transaction.
-    tx: String,
-}
-
-async fn submit<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<SubmitBody>) -> Res {
+async fn submit<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<dto::SubmitBody>) -> Res {
     let tx = SignedTx(dto::decode_tx(&b.tx)?);
     let sig = s
         .ledger()?
@@ -200,21 +183,11 @@ async fn submit<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<SubmitBody
     Ok(Json(json!({ "signature": sig.0 })))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum Outcome {
-    Issued,
-    Denied,
-}
-
-#[derive(Deserialize)]
-struct AttestBody {
-    vault: String,
-    outcome: Outcome,
-}
-
 /// DEMO ONLY: signs the visa outcome with the project's demo attestor key.
-async fn demo_attest<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<AttestBody>) -> Res {
+async fn demo_attest<P: Ports>(
+    State(s): State<AppState<P>>,
+    Body(b): Body<dto::AttestBody>,
+) -> Res {
     let signer = s.attestor.as_ref().ok_or_else(|| {
         ApiError::new(
             StatusCode::FORBIDDEN,
@@ -224,8 +197,8 @@ async fn demo_attest<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<Attes
     })?;
     let vault = dto::account(&b.vault)?;
     let outcome = match b.outcome {
-        Outcome::Issued => VisaOutcome::Issued,
-        Outcome::Denied => VisaOutcome::Denied,
+        dto::Outcome::Issued => VisaOutcome::Issued,
+        dto::Outcome::Denied => VisaOutcome::Denied,
     };
     let vault_b58 = arrhabon_app::address::to_base58(vault);
     tracing::info!(vault = %vault_b58, ?outcome, "DEMO attestor signing visa outcome");
@@ -239,19 +212,7 @@ async fn demo_attest<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<Attes
     })))
 }
 
-#[derive(Deserialize)]
-struct QuoteBody {
-    vault: String,
-    origin_chain: String,
-    origin_asset: String,
-    /// Smallest unit of the origin asset, as a decimal string (may exceed 2^53).
-    origin_amount: String,
-    funder: String,
-    refund_to: String,
-    slippage_bps: u16,
-}
-
-async fn quote<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<QuoteBody>) -> Res {
+async fn quote<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<dto::QuoteBody>) -> Res {
     for (name, value) in [
         ("origin_chain", &b.origin_chain),
         ("origin_asset", &b.origin_asset),
@@ -267,28 +228,33 @@ async fn quote<P: Ports>(State(s): State<AppState<P>>, Body(b): Body<QuoteBody>)
         .origin_amount
         .parse()
         .map_err(|_| ApiError::bad_request("origin_amount must be a decimal integer string"))?;
+    let vault = dto::account(&b.vault)?;
+    let funder = dto::account(&b.funder)?;
     let quote = QuoteCrossChainFunding {
-        vault: dto::account(&b.vault)?,
+        vault,
         origin_chain: b.origin_chain,
         origin_asset: b.origin_asset,
         origin_amount,
-        funder: dto::account(&b.funder)?,
+        funder,
         refund_to: b.refund_to,
         slippage_bps: b.slippage_bps,
     }
     .execute(s.ledger()?, &s.quoter, &s.clock)
     .await?;
+    if !quote.deposit_address.is_empty() {
+        s.mirror.lock().expect("mirror lock poisoned").remember(
+            quote.deposit_address.clone(),
+            funder,
+            vault,
+            quote.min_usdc_out,
+        );
+    }
     Ok(Json(dto::swap_quote(&quote)))
-}
-
-#[derive(Deserialize)]
-struct StatusQuery {
-    deposit_address: String,
 }
 
 async fn funding_status<P: Ports>(
     State(s): State<AppState<P>>,
-    Query(q): Query<StatusQuery>,
+    Query(q): Query<dto::StatusQuery>,
 ) -> Res {
     let status = s
         .quoter

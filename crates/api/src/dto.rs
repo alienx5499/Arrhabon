@@ -6,6 +6,7 @@ use arrhabon_app::queries::{FunderView, RefundState, RegistryView, UniversityPro
 use arrhabon_domain::{AccountId, VaultStatus};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
+use serde::Deserialize;
 use serde_json::{Value, json};
 
 use crate::error::ApiError;
@@ -115,4 +116,59 @@ pub fn swap_status(s: SwapStatus) -> &'static str {
         SwapStatus::Refunded => "refunded",
         SwapStatus::Failed => "failed",
     }
+}
+
+#[derive(Deserialize)]
+pub struct CreateVaultBody {
+    pub student: String,
+    pub university: String,
+    pub attestor: String,
+    /// USDC micro-units.
+    pub target: u64,
+    /// Unix seconds.
+    pub deadline: i64,
+    pub nonce: u64,
+}
+
+#[derive(Deserialize)]
+pub struct ContributeBody {
+    pub funder: String,
+    /// USDC micro-units.
+    pub amount: u64,
+}
+
+#[derive(Deserialize)]
+pub struct SubmitBody {
+    /// Base64 of the wallet-signed transaction.
+    pub tx: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Outcome {
+    Issued,
+    Denied,
+}
+
+#[derive(Deserialize)]
+pub struct AttestBody {
+    pub vault: String,
+    pub outcome: Outcome,
+}
+
+#[derive(Deserialize)]
+pub struct QuoteBody {
+    pub vault: String,
+    pub origin_chain: String,
+    pub origin_asset: String,
+    /// Smallest unit of the origin asset, as a decimal string (may exceed 2^53).
+    pub origin_amount: String,
+    pub funder: String,
+    pub refund_to: String,
+    pub slippage_bps: u16,
+}
+
+#[derive(Deserialize)]
+pub struct StatusQuery {
+    pub deposit_address: String,
 }

@@ -82,17 +82,17 @@ If the faucet runs dry, judges can still get devnet SOL at https://faucet.solana
 - [ ] Open the Vercel URL, log in with Privy, create a vault, and open its vault page. The browser console shows no CORS errors.
 - [ ] Render logs show the crank running every 10 s without errors.
 
-## 6. Demo attestor (on for the devnet demo)
+## 6. Demo attestor and live mirror (on for the devnet demo)
 
-`DEMO_ATTESTOR=true` lets anyone call `POST /demo/attest` and confirm or deny any vault that names the demo attestor. Turn it on only for the recording:
+`DEMO_ATTESTOR=true` lets anyone call `POST /demo/attest` and confirm or deny any vault that names the demo attestor. The devnet mirror needs both `FAUCET=true` and `AURORA_LIVE=true`; turn `AURORA_LIVE` off after recording:
 
 1. Make sure the `attestor.json` secret file is present.
-2. Set `DEMO_ATTESTOR=true`, save, wait for the redeploy; `/health` shows `"demo_attestor":true`.
+2. Set `DEMO_ATTESTOR=true` and `AURORA_LIVE=true`, save, wait for the redeploy; `/health` shows `"demo_attestor":true`.
 3. Record.
 
 ## 7. Turn off / roll back
 
-- **Before real money, demo attestor off:** set `DEMO_ATTESTOR=false`, save, then delete the `attestor.json` secret file. Confirm `/health` shows `"demo_attestor":false`.
+- **Before real money, demo attestor and live mirror off:** set `DEMO_ATTESTOR=false` and `AURORA_LIVE=false`, save, then delete the `attestor.json` secret file. Confirm `/health` shows `"demo_attestor":false`.
 - **Bad deploy:** Render > `arrhabon-api` > Events, pick the last good deploy > Rollback. Vercel > Deployments, pick the last good one > Promote to Production.
 - **Leaked key:** remove the secret file, stop the service, and replace the key. A leaked crank key only risks its devnet SOL; a leaked attestor key can decide visa outcomes for vaults naming it, so deactivate it with the deployer (registry admin) key, then register a new attestor:
 

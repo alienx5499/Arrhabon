@@ -49,6 +49,16 @@ export type Quote = {
 export type SwapStatus = "pending" | "success" | "refunded" | "failed";
 export type FundingStatus = { deposit_address: string; status: SwapStatus };
 
+/** DEMO devnet mirror grant: matching test USDC on devnet for a settled mainnet swap. */
+export type MirrorGrant = {
+  demo: true;
+  notice: string;
+  signature: string;
+  usdc_micro: string;
+  funder: string;
+  vault: string;
+};
+
 /** DEMO faucet grant: devnet SOL in lamports and test USDC in micro units (string, may exceed 2^53). */
 export type FaucetGrant = { demo: true; notice: string; signature: string; lamports: number; usdc_micro: string };
 
@@ -104,6 +114,7 @@ export const api = {
     slippage_bps: number;
   }) => call<Quote>("/funding/quote", b),
   fundingStatus: (depositAddress: string) => call<FundingStatus>(`/funding/status?deposit_address=${seg(depositAddress)}`),
+  mirror: (depositAddress: string) => call<MirrorGrant>("/funding/mirror", { deposit_address: depositAddress }),
 };
 
 export const b64ToBytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));

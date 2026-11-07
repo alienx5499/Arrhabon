@@ -1,12 +1,17 @@
 //! Cross-chain funding quotes, checked against the vault before and after quoting.
 
-use arrhabon_domain::AccountId;
+use arrhabon_domain::{AccountId, Usdc};
 
 use super::{check_funder, load_vault, precheck_contribution};
 use crate::AppError;
-use crate::ports::{Clock, DestinationAsset, QuoteRequest, SwapQuote, SwapQuoter, VaultLedger};
+use crate::ports::{
+    Clock, DestinationAsset, QuoteRequest, SwapQuote, SwapQuoter, SwapStatus, TestFunds,
+    TxSignature, VaultLedger,
+};
 
 const MAX_SLIPPAGE_BPS: u16 = 10_000;
+/// At most 100 test USDC is mirrored per settled mainnet swap.
+pub const MAX_MIRROR_USDC: Usdc = Usdc::new(100_000_000);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QuoteCrossChainFunding {
@@ -58,5 +63,51 @@ impl QuoteCrossChainFunding {
             .await?;
         precheck_contribution(ledger, &vault, self.funder, quote.min_usdc_out, clock.now()).await?;
         Ok(quote)
+    }
+}
+
+/// The quote details remembered when a live swap was quoted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SwapRecord {
+    pub funder: AccountId,
+    pub vault: AccountId,
+    pub amount: Usdc,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MirrorSettledSwap {
+    pub deposit_address: String,
+    pub record: SwapRecord,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Mirror {
+    pub signature: TxSignature,
+    pub usdc: Usdc,
+    pub funder: AccountId,
+    pub vault: AccountId,
+}
+
+impl MirrorSettledSwap {
+    /// Mirrors a successful live Aurora swap as devnet test USDC to the funder's wallet.
+    pub async fn execute(
+        &self,
+        quoter: &impl SwapQuoter,
+        faucet: &impl TestFunds,
+    ) -> Result<Mirror, AppError> {
+        let status = quoter.status(&self.deposit_address).await?;
+        match status {
+            SwapStatus::Pending => return Err(AppError::SwapPending),
+            SwapStatus::Refunded | SwapStatus::Failed => return Err(AppError::SwapNotSettled),
+            SwapStatus::Success => {}
+        }
+        let usdc = self.record.amount.min(MAX_MIRROR_USDC);
+        let signature = faucet.send(self.record.funder, 0, usdc).await?;
+        Ok(Mirror {
+            signature,
+            usdc,
+            funder: self.record.funder,
+            vault: self.record.vault,
+        })
     }
 }

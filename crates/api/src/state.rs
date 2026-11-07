@@ -37,6 +37,10 @@ pub struct Inner<P: Ports> {
     pub faucet: OnceLock<P::Faucet>,
     /// Faucet cooldowns and the hourly grant budget.
     pub faucet_claims: Mutex<crate::faucet::Claims>,
+    /// Live Aurora quotes allowed; `AURORA_LIVE=true` only.
+    pub aurora_live: bool,
+    /// Live quote cache and once-only mirror claims.
+    pub mirror: Mutex<crate::mirror::MirrorState>,
     /// `devnet` or `localnet`, reported by `/health`.
     pub cluster: &'static str,
 }

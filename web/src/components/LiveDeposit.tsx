@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
-import { api, type Quote, type SwapStatus } from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import { api, ApiError, type MirrorGrant, type Quote, type SwapStatus } from "@/lib/api";
 import { formatDeadline } from "@/lib/countdown";
-import { isFinalStatus, swapStatusMessage } from "@/lib/quote";
-import { Usdc } from "./ui";
+import { isFinalStatus, mirrorErrorMessage, mirrorSuccessMessage, swapStatusMessage } from "@/lib/quote";
+import { formatUsdc } from "@/lib/usdc";
+import { TxLink, Usdc } from "./ui";
 
 export type LiveDepositProps = {
   quote: Quote;
@@ -17,6 +18,27 @@ export function LiveDeposit({ quote, chain, asset, amount }: LiveDepositProps) {
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<SwapStatus | null>("pending");
   const [expired, setExpired] = useState(() => Number.isFinite(expiryMs) && Date.now() >= expiryMs);
+  const [mirror, setMirror] = useState<MirrorGrant | null>(null);
+  const [mirrorError, setMirrorError] = useState<string | null>(null);
+  const mirroredRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (status !== "success" || mirroredRef.current === quote.deposit_address) return;
+    mirroredRef.current = quote.deposit_address;
+    api
+      .mirror(quote.deposit_address)
+      .then((m) => {
+        setMirror(m);
+        setMirrorError(null);
+      })
+      .catch((err) => {
+        if (err instanceof ApiError) {
+          setMirrorError(mirrorErrorMessage(err.code));
+        } else {
+          setMirrorError("Could not mirror swap to devnet test USDC.");
+        }
+      });
+  }, [status, quote.deposit_address]);
 
   useEffect(() => {
     const isExpired = () => Number.isFinite(expiryMs) && Date.now() >= expiryMs;
@@ -105,6 +127,22 @@ export function LiveDeposit({ quote, chain, asset, amount }: LiveDepositProps) {
       <div role="status" aria-live="polite" className="text-sm">
         {expired && !isFinalStatus(status ?? "") ? (
           <p className="muted">Quote expired. Request a new quote before sending funds.</p>
+        ) : mirror ? (
+          <div className="flex flex-col gap-2">
+            <p>{mirrorSuccessMessage(mirror.usdc_micro)}</p>
+            <p><TxLink sig={mirror.signature} /></p>
+            <div className="flex flex-wrap items-center gap-2">
+              <a href="#vault-side-head" className="btn-secondary">
+                Contribute {formatUsdc(mirror.usdc_micro)} USDC
+              </a>
+              <span className="text-sm muted">Enter {formatUsdc(mirror.usdc_micro)} in the deposit form above.</span>
+            </div>
+          </div>
+        ) : mirrorError ? (
+          <div className="flex flex-col gap-1">
+            <p>{swapStatusMessage(status ?? "")}</p>
+            <p className="problem">{mirrorError}</p>
+          </div>
         ) : status ? (
           <p>{swapStatusMessage(status)}</p>
         ) : null}

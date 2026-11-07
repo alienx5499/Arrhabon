@@ -6,6 +6,7 @@ mod crank;
 mod dto;
 mod error;
 mod faucet;
+mod mirror;
 mod routes;
 mod state;
 #[cfg(test)]
@@ -110,6 +111,7 @@ async fn run() -> Result<(), String> {
         }
         false => None,
     };
+    let aurora_live = flag("AURORA_LIVE", var("AURORA_LIVE").as_deref(), false)?;
     let quoter = AuroraQuoter::new(AuroraConfig::from_env())
         .map_err(|e| format!("aurora client: {}", scrub(&e.to_string())))?;
     let state: AppState<Live> = AppState(Arc::new(Inner {
@@ -121,6 +123,8 @@ async fn run() -> Result<(), String> {
         faucet_on,
         faucet: OnceLock::new(),
         faucet_claims: Default::default(),
+        aurora_live,
+        mirror: Default::default(),
         cluster: network.name(),
     }));
 

@@ -4,8 +4,8 @@ use arrhabon_domain::DomainError;
 
 use super::*;
 use crate::AppError;
-use crate::commands::QuoteCrossChainFunding;
-use crate::fakes::FakeQuoter;
+use crate::commands::{MAX_MIRROR_USDC, MirrorSettledSwap, QuoteCrossChainFunding, SwapRecord};
+use crate::fakes::{FakeFaucet, FakeQuoter};
 use crate::ports::{SwapQuoter, SwapStatus};
 
 fn quote_cmd(vault: AccountId, amount: u128) -> QuoteCrossChainFunding {
@@ -83,4 +83,111 @@ fn quote_cross_chain_funding_checks_the_vault_before_asking_for_a_quote() {
     );
     // No deposit address was ever handed out.
     assert!(run(quoter.status("deposit-1")).is_err());
+}
+
+#[test]
+fn mirrors_success_once() {
+    let (clock, _) = setup();
+    let quoter = FakeQuoter::new(clock, Usdc::new(200_000));
+    quoter.set_status("deposit-1", SwapStatus::Success);
+    let faucet = FakeFaucet::default();
+    let cmd = MirrorSettledSwap {
+        deposit_address: "deposit-1".into(),
+        record: SwapRecord {
+            funder: UNCLE,
+            vault: AccountId([10; 32]),
+            amount: Usdc::new(50_000_000),
+        },
+    };
+    let mirror = run(cmd.execute(&quoter, &faucet)).unwrap();
+    assert_eq!(mirror.usdc, Usdc::new(50_000_000));
+    assert_eq!(mirror.funder, UNCLE);
+    assert_eq!(mirror.vault, AccountId([10; 32]));
+    assert_eq!(faucet.sent(), vec![(UNCLE, 0, Usdc::new(50_000_000))]);
+}
+
+#[test]
+fn refuses_pending() {
+    let (clock, _) = setup();
+    let quoter = FakeQuoter::new(clock, Usdc::new(200_000));
+    quoter.set_status("deposit-1", SwapStatus::Pending);
+    let faucet = FakeFaucet::default();
+    let cmd = MirrorSettledSwap {
+        deposit_address: "deposit-1".into(),
+        record: SwapRecord {
+            funder: UNCLE,
+            vault: AccountId([10; 32]),
+            amount: Usdc::new(50_000_000),
+        },
+    };
+    assert_eq!(
+        run(cmd.execute(&quoter, &faucet)),
+        Err(AppError::SwapPending)
+    );
+    assert!(faucet.sent().is_empty());
+}
+
+#[test]
+fn refuses_refunded_and_failed() {
+    let (clock, _) = setup();
+    let quoter = FakeQuoter::new(clock, Usdc::new(200_000));
+    let faucet = FakeFaucet::default();
+    let cmd = MirrorSettledSwap {
+        deposit_address: "deposit-1".into(),
+        record: SwapRecord {
+            funder: UNCLE,
+            vault: AccountId([10; 32]),
+            amount: Usdc::new(50_000_000),
+        },
+    };
+    quoter.set_status("deposit-1", SwapStatus::Refunded);
+    assert_eq!(
+        run(cmd.execute(&quoter, &faucet)),
+        Err(AppError::SwapNotSettled)
+    );
+    quoter.set_status("deposit-1", SwapStatus::Failed);
+    assert_eq!(
+        run(cmd.execute(&quoter, &faucet)),
+        Err(AppError::SwapNotSettled)
+    );
+    assert!(faucet.sent().is_empty());
+}
+
+#[test]
+fn caps_amount_at_100_usdc() {
+    let (clock, _) = setup();
+    let quoter = FakeQuoter::new(clock, Usdc::new(200_000));
+    quoter.set_status("deposit-1", SwapStatus::Success);
+    let faucet = FakeFaucet::default();
+    let cmd = MirrorSettledSwap {
+        deposit_address: "deposit-1".into(),
+        record: SwapRecord {
+            funder: UNCLE,
+            vault: AccountId([10; 32]),
+            amount: Usdc::new(250_000_000),
+        },
+    };
+    let mirror = run(cmd.execute(&quoter, &faucet)).unwrap();
+    assert_eq!(mirror.usdc, MAX_MIRROR_USDC);
+    assert_eq!(faucet.sent(), vec![(UNCLE, 0, MAX_MIRROR_USDC)]);
+}
+
+#[test]
+fn releases_claim_when_send_fails() {
+    let (clock, _) = setup();
+    let quoter = FakeQuoter::new(clock, Usdc::new(200_000));
+    quoter.set_status("deposit-1", SwapStatus::Success);
+    let faucet = FakeFaucet::default();
+    faucet.set_failing(true);
+    let cmd = MirrorSettledSwap {
+        deposit_address: "deposit-1".into(),
+        record: SwapRecord {
+            funder: UNCLE,
+            vault: AccountId([10; 32]),
+            amount: Usdc::new(50_000_000),
+        },
+    };
+    let err = run(cmd.execute(&quoter, &faucet)).unwrap_err();
+    assert!(matches!(err, AppError::Unavailable(_)));
+    assert!(faucet.sent().is_empty());
 }

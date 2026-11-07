@@ -1,5 +1,6 @@
 // Aurora price-check inputs: the API's chain ids with readable names, slippage typed as a percent.
 import type { SwapStatus } from "./api";
+import { formatUsdc } from "./usdc";
 
 export const CHAINS = [
   { id: "base", name: "Base" },
@@ -34,4 +35,28 @@ export function swapStatusMessage(status: SwapStatus | string): string {
     default:
       return "Waiting for deposit and swap to complete.";
   }
+}
+
+/** Plain sentence explaining a mirror failure. */
+export function mirrorErrorMessage(code: string): string {
+  switch (code) {
+    case "swap_pending":
+      return "Swap is still pending on mainnet. Please wait for confirmation.";
+    case "swap_not_settled":
+      return "Swap did not settle on mainnet (refunded or failed).";
+    case "unknown_deposit":
+      return "Deposit address was not recognized for this session.";
+    case "already_mirrored":
+      return "This swap was already mirrored to devnet test USDC.";
+    case "mirror_disabled":
+      return "Devnet mirror is disabled.";
+    default:
+      return "Could not mirror swap to devnet test USDC.";
+  }
+}
+
+/** Formats the success message for a devnet mirror grant. */
+export function mirrorSuccessMessage(usdcMicro: string | number | bigint): string {
+  const n = formatUsdc(usdcMicro);
+  return `Swap complete. ${n} test USDC mirrored to your devnet wallet for this vault (devnet test money; the swap itself was real on mainnet).`;
 }

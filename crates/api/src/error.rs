@@ -15,6 +15,7 @@ pub struct ApiError {
     pub status: StatusCode,
     pub code: String,
     pub message: String,
+    pub signature: Option<String>,
 }
 
 impl ApiError {
@@ -23,6 +24,16 @@ impl ApiError {
             status,
             code: code.into(),
             message: scrub(&message.into()),
+            signature: None,
+        }
+    }
+
+    pub fn already_mirrored(signature: &str) -> Self {
+        ApiError {
+            status: StatusCode::CONFLICT,
+            code: "already_mirrored".into(),
+            message: "swap has already been mirrored".into(),
+            signature: Some(signature.into()),
         }
     }
 
@@ -56,6 +67,8 @@ impl From<AppError> for ApiError {
             }
             AppError::AlreadyApplied => (S::CONFLICT, "already_applied".into()),
             AppError::AlreadyFunded => (S::CONFLICT, "already_funded".into()),
+            AppError::SwapPending => (S::CONFLICT, "swap_pending".into()),
+            AppError::SwapNotSettled => (S::CONFLICT, "swap_not_settled".into()),
             AppError::Rejected(_) => (S::BAD_REQUEST, "rejected".into()),
             AppError::Unavailable(detail) => {
                 // The detail can name upstream hosts; it goes to logs (scrubbed), not clients.
@@ -89,8 +102,11 @@ impl From<QueryRejection> for ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        let body = Json(json!({ "error": self.message, "code": self.code }));
-        (self.status, body).into_response()
+        let mut body = json!({ "error": self.message, "code": self.code });
+        if let Some(sig) = self.signature {
+            body["signature"] = json!(sig);
+        }
+        (self.status, Json(body)).into_response()
     }
 }
 
