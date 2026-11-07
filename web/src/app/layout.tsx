@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import { Epilogue, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { LoginBar } from "@/components/LoginBar";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Wallet routes (student, vault) mount WalletProvider in their own layout so this page stays free of Privy. */}
         <main id="main" tabIndex={-1} className="wrap flex-1 py-8 outline-none">{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
