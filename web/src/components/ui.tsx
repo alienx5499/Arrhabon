@@ -1,13 +1,13 @@
 "use client";
 // Small presentational pieces shared by the views.
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import type { VaultStatus } from "@/lib/api";
 import { explorerAddress, explorerTx } from "@/lib/config";
 import { formatCountdown } from "@/lib/countdown";
 import { formatUsdc } from "@/lib/usdc";
 
 export function StatusBadge({ status }: { status: VaultStatus }) {
-  return <span className={`label status-label ${status === "refunding" ? "label-accent" : ""}`}>{status}</span>;
+  return <span className={`tag tag-${status}`}>{status[0].toUpperCase() + status.slice(1)}</span>;
 }
 
 export const Usdc = ({ micro }: { micro: number | bigint }) => (
@@ -61,12 +61,15 @@ export const ErrorText = ({ error }: { error: unknown }) =>
     </p>
   ) : null;
 
-export const Card = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className="card" aria-label={title}>
-    <h2 className="section-head">{title}</h2>
-    {children}
-  </section>
-);
+export function Card({ title, children }: { title: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <section className="card" aria-labelledby={id}>
+      <h2 id={id} className="section-head">{title}</h2>
+      {children}
+    </section>
+  );
+}
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

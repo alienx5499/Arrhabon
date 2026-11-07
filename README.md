@@ -180,6 +180,7 @@ Web (`web/`):
 | `NEXT_PUBLIC_PRIVY_APP_ID` | required | Your Privy app id. |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8080` | The API's base URL. |
 | `NEXT_PUBLIC_SOLANA_RPC_URL` | `https://api.devnet.solana.com` | RPC the browser uses. |
+| `NEXT_PUBLIC_SITE_URL` | the Vercel URL, else `http://localhost:3000` | Public site URL; makes share-image (og:image, twitter:image) links absolute. |
 | `NEXT_PUBLIC_PROGRAM_ID` | the deployed program | Arrhabon program id, used to check transactions before signing. |
 | `NEXT_PUBLIC_UNIVERSITIES` | empty | Display names, `Name=address,Name2=address2`. Also the picker fallback when `/registry` is unreachable. |
 | `NEXT_PUBLIC_ATTESTORS` | empty | Same format, for attestors. |

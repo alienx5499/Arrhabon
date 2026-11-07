@@ -1,104 +1,167 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { ArtSlot } from "@/components/ArtSlot";
+import { DEMO_VIDEO_URL, REPO_URL, SHOWCASE_VAULTS, UNIVERSITIES } from "@/lib/config";
+import "./landing.css";
 
-const SOURCES = [
-  { name: "The Korea Herald", date: "7 Oct 2026", url: "https://www.koreaherald.com/article/10895948" },
-  {
-    name: "ICEF Monitor",
-    date: "10 Sep 2026",
-    url: "https://monitor.icef.com/2026/09/korean-government-introduces-new-quality-controls-for-universities-and-agents/",
-  },
-  {
-    name: "The PIE News",
-    date: "5 Oct 2026",
-    url: "https://thepienews.com/in-focus-how-uk-unis-are-staying-under-the-5-bca-threshold/",
-  },
-];
-
-// Each figure is reported separately by its source; they are never summed.
-const FACTS = [
-  { figure: "about 400", text: "international students at Singyeongju University still owed tuition refunds after visa denials", source: "The Korea Herald" },
-  { figure: "about 170", text: "international students at Woongji still owed tuition refunds after visa denials", source: "The Korea Herald" },
-  { figure: "19,608", text: "student visas refused by the UK in the year to June 2026", source: "The PIE News" },
-];
+const vaultHref = (id: string) => `/vault/${encodeURIComponent(id)}`;
+const university = UNIVERSITIES[0];
+const liveVaultHref = SHOWCASE_VAULTS[0] ? vaultHref(SHOWCASE_VAULTS[0].id) : "#see-it-work";
 
 const STEPS = [
-  { title: "Create", text: "The student creates a vault naming the university, the visa attestor, a target and a deadline." },
-  { title: "Fund", text: "Family members pay in to the vault link the student shares." },
-  { title: "Visa issued", text: "The university is paid once the visa is issued." },
-  { title: "Denied or expired", text: "If it is denied or nobody confirms by the deadline, every family member who paid in gets their contribution back." },
+  { title: "Open a vault", text: "The student names the university, the amount and a deadline, then shares the vault link." },
+  { title: "Family chips in", text: "Parents, relatives and the student pay in from the link. Every payment is kept with the name of who made it." },
+  { title: "Visa decision", text: "The registered attestor confirms whether the visa was issued or refused." },
+  { title: "Issued: paid to the university", text: "The whole deposit goes to the university in one payment." },
+  { title: "Denied or late: everyone refunded", text: "If the visa is refused, or nobody answers by the deadline, each funder gets back exactly what they paid." },
+];
+
+const FAQ: { q: string; a: ReactNode }[] = [
+  {
+    q: "Who confirms the visa?",
+    a: "A registered attestor: a party on the program's list whose signed answer is the only one the vault accepts. This demo uses a demo signer, and every page where it appears says so.",
+  },
+  {
+    q: "Can anyone take the money?",
+    a: "No. The program that holds the deposit has two ways to pay out: the whole amount to the named university after an issued visa, or each payment back to the person who made it. Nobody can send it anywhere else.",
+  },
+  {
+    q: "What if nobody decides?",
+    a: "When the deadline passes without an answer, the vault switches to refunds. Anyone can start them, and each funder gets back what they paid.",
+  },
+  {
+    q: "What does it cost?",
+    a: "Arrhabon takes no fee. Each payment carries a small network fee, usually well under a cent, and in the demo even that is paid with test money.",
+  },
+  {
+    q: "Is this real money?",
+    a: "No. The demo runs on test money on Solana devnet. The dollars are tUSD, a test dollar with no value.",
+  },
+  {
+    q: "Is it audited?",
+    a: "No. Arrhabon is a prototype and nobody has audited it. Please do not use it for a real deposit yet.",
+  },
+  {
+    q: "Where is the code?",
+    a: REPO_URL ? (
+      <>
+        Every line is open to read: <a href={REPO_URL}>see the code</a>.
+      </>
+    ) : (
+      "The code is public. The link is in the project submission."
+    ),
+  },
 ];
 
 export default function Home() {
   return (
-    <div className="flex flex-col gap-8">
-      <section className="lead cols" aria-labelledby="lead-headline">
-        <article className="flex flex-col gap-4">
-          <p className="label label-accent">Lead</p>
-          <h1 id="lead-headline" className="headline">A tuition deposit that refunds itself</h1>
-          <p className="story">
-            In October 2026 The Korea Herald reported that about 400 international students at Singyeongju University
-            and about 170 at Woongji were still owed tuition refunds after their visas were denied. Korea&apos;s education
-            ministry already requires refunding students whose visa is denied (ICEF Monitor, 10 Sep 2026), and the UK
-            refused 19,608 student visas in the year to June 2026 (The PIE News, 5 Oct 2026). The rule exists; the money
-            still sits with the university. Arrhabon holds the deposit in a Solana program instead: the university is
-            paid once the visa is issued, and if it is denied or nobody confirms by the deadline, every family member
-            who paid in gets their contribution back.
+    <div className="lp">
+      <section className="lp-hero" aria-labelledby="hero-title">
+        <h1 id="hero-title">A tuition deposit that refunds itself.</h1>
+        <div className="lp-hero-copy">
+          <p className="lp-lead">
+            Your family pays into one vault. If the visa is issued, the university gets the deposit. If it is refused,
+            everyone who paid gets their money back.
           </p>
-        </article>
-        <aside className="flex flex-col" aria-label="Actions">
-          <div className="flex flex-col gap-3 pb-4">
-            <h2 className="section-head mb-0">Create a vault</h2>
-            <Link href="/student" className="btn self-start">I&apos;m a student: create a vault</Link>
+          <div className="lp-actions">
+            <Link className="lp-btn lp-btn-primary" href="/student">Open a vault</Link>
+            <Link className="lp-btn lp-btn-quiet" href={liveVaultHref}>See a live vault</Link>
           </div>
-          <div className="rule-hair flex flex-col gap-2 pt-4">
-            <h2 className="section-head mb-0">Open a vault</h2>
-            <p className="compact">
-              Funders open the vault link the student shares. Universities open /university/&lt;their address&gt;.
-            </p>
-          </div>
-        </aside>
+        </div>
+        <ArtSlot
+          className="lp-hero-art"
+          src="/art/hero.webp"
+          alt="A gold coin under a glass bell jar before a stone gateway, a student with a suitcase beside it and a dashed path leading home."
+          ratio="16 / 9"
+          sizes="(max-width: 760px) 100vw, 60vw"
+          priority
+        />
       </section>
 
-      <section className="rule-section pt-3" aria-label="Figures">
-        <dl className="cols">
-          {FACTS.map((f) => (
-            <div key={f.figure} className="fact">
-              <dt className="fact-figure">{f.figure}</dt>
-              <dd className="compact">
-                {f.text} <span className="label muted whitespace-nowrap">{f.source}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
+      <section className="lp-field" aria-labelledby="exits-title">
+        <h2 id="exits-title">The money has two ways out. Nobody can add a third.</h2>
+        <div className="lp-exits">
+          <div>
+            <h3>Visa issued</h3>
+            <p>The attestor confirms. The whole deposit goes to the university in one payment.</p>
+          </div>
+          <div>
+            <h3>Visa refused, or no answer by the deadline</h3>
+            <p>Every funder gets back exactly what they paid. Anyone can start the refund.</p>
+          </div>
+        </div>
       </section>
 
-      <section className="rule-section pt-3" aria-labelledby="how-heading">
-        <h2 id="how-heading" className="label label-accent mb-3">How it works</h2>
-        <ol className="cols">
-          {STEPS.map((s, i) => (
+      <section className="lp-section" id="how-it-works" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <ArtSlot
+          className="lp-how-art"
+          src="/art/how-it-works.webp"
+          alt="Five scenes in a row: a student sets down a glass jar, three homes send coins into it, a sealed letter arrives, a coin rolls through the gateway, and coins return to each home."
+          ratio="3 / 1"
+          sizes="(max-width: 1240px) 100vw, 1200px"
+        />
+        <ol className="lp-steps">
+          {STEPS.map((s) => (
             <li key={s.title}>
-              <h3 className="section-head mb-1 text-[20px]">
-                {i + 1}. {s.title}
-              </h3>
-              <p className="compact">{s.text}</p>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section aria-labelledby="sources-heading" className="rule-section pt-3 text-sm">
-        <h2 id="sources-heading" className="label label-accent mb-2">Sources</h2>
-        <ul className="listing">
-          {SOURCES.map((s) => (
-            <li key={s.name} className="listing-row">
-              <a className="link field-label" href={s.url} target="_blank" rel="noreferrer">
-                {s.name}
-              </a>
-              <span className="muted">{s.date}</span>
+      <section className="lp-section" id="why-trust-it" aria-labelledby="trust-title">
+        <h2 id="trust-title">Why trust it</h2>
+        <div className="lp-faq">
+          {FAQ.map((f) => (
+            <details key={f.q}>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="lp-section" id="see-it-work" aria-labelledby="see-title">
+        <h2 id="see-title">See it work</h2>
+        <ul className="lp-cards">
+          {SHOWCASE_VAULTS.map((v) => (
+            <li key={v.id}>
+              <Link className="lp-card" href={vaultHref(v.id)}>
+                <span className="lp-card-title">{v.label} vault</span>
+                <span className="lp-card-note">Every payment, the decision and where the money went.</span>
+              </Link>
             </li>
           ))}
+          {university && (
+            <li>
+              <Link className="lp-card" href={`/university/${encodeURIComponent(university.address)}`}>
+                <span className="lp-card-title">University proof page</span>
+                <span className="lp-card-note">What a university sees: every deposit that names it, and where each one stands.</span>
+              </Link>
+            </li>
+          )}
+          {DEMO_VIDEO_URL && (
+            <li className="lp-card-video">
+              <a className="lp-card" href={DEMO_VIDEO_URL}>
+                <ArtSlot src="/art/poster.webp" alt="" ratio="16 / 9" sizes="(max-width: 760px) 100vw, 40vw" />
+                <span className="lp-card-title">Watch the demo</span>
+                <span className="lp-card-note">A short film of a deposit paid in, decided and settled.</span>
+              </a>
+            </li>
+          )}
         </ul>
-        <p className="mt-3 muted">Runs on Solana devnet with test USDC. The visa attestor is the one trusted party.</p>
+        <div className="lp-note">
+          <h3>How to get test money</h3>
+          <p>
+            Reading a vault needs no money. To pay in yourself, log in with your email and the app makes a wallet for
+            you. Copy its address, take a little free test SOL for network fees from{" "}
+            <a href="https://faucet.solana.com">faucet.solana.com</a> (choose devnet), then ask for tUSD, the
+            demo&apos;s test dollar,{" "}
+            {REPO_URL ? <>by opening an issue on <a href={REPO_URL}>the code repository</a></> : "through the project submission"}.
+          </p>
+        </div>
       </section>
     </div>
   );

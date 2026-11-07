@@ -85,12 +85,18 @@ export function CreateVaultForm({ onCreated }: { onCreated: () => void }) {
       <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <PartySelect label="University" name="university" parties={parties.universities} />
         <PartySelect label="Visa attestor (confirms the visa decision)" name="attestor" parties={parties.attestors} />
-        <Field label="Target (USDC)">
-          <input name="target" required inputMode="decimal" className="input w-full max-w-full" placeholder="1000" />
-        </Field>
-        <Field label="Deadline for the visa decision (your local time)">
-          <input name="deadline" required type="datetime-local" className="input w-full max-w-full" />
-        </Field>
+        <div className="flex min-w-0 flex-col gap-1">
+          <Field label="Target (USDC)">
+            <input name="target" required inputMode="decimal" className="input w-full max-w-full" placeholder="1000" aria-describedby={`${why}-target`} />
+          </Field>
+          <p id={`${why}-target`} className="muted text-sm">The university is paid only if at least this much is held.</p>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <Field label="Deadline for the visa decision (your local time)">
+            <input name="deadline" required type="datetime-local" className="input w-full max-w-full" aria-describedby={`${why}-deadline`} />
+          </Field>
+          <p id={`${why}-deadline`} className="muted text-sm">No visa confirmed by then: every funder is refunded.</p>
+        </div>
         <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
           <button className="btn self-start" disabled={disabledWhy !== null} aria-describedby={disabledWhy ? why : undefined}>
             {tx.busy ? "Waiting for signature…" : "Create vault"}

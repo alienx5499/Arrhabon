@@ -19,6 +19,9 @@ export function UniversityView({ id }: { id: string }) {
     }, [id]),
   );
   const totals = rows.data && universityTotals(rows.data.map((r) => r.vault));
+  // Until the first reply, hold the room the figures and cards will take so nothing below them jumps.
+  const pending = rows.loading && !rows.data;
+  const figure = (micro?: bigint) => (micro === undefined ? "…" : <Usdc micro={micro} />);
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,49 +31,55 @@ export function UniversityView({ id }: { id: string }) {
         its rules: to you when the visa is issued, or back to the funders if it is denied or the deadline passes. Who can
         upgrade the program is disclosed in the README.
       </p>
-      <Loading show={rows.loading && !rows.data} />
       <Problem error={rows.error} onRetry={rows.reload} />
-      {totals && (
-        <dl className="cols border-b border-b-rule pb-4">
+      {(totals || pending) && (
+        <dl className="cols">
           <div className="fact">
             <dt className="label muted">Held now</dt>
-            <dd className="fact-figure"><Usdc micro={totals.held} /></dd>
+            <dd className="fact-figure">{figure(totals?.held)}</dd>
           </div>
           <div className="fact">
             <dt className="label muted">Paid to you</dt>
-            <dd className="fact-figure"><Usdc micro={totals.released} /></dd>
+            <dd className="fact-figure">{figure(totals?.released)}</dd>
           </div>
           <div className="fact">
             <dt className="label muted">Refunded</dt>
-            <dd className="fact-figure"><Usdc micro={totals.refunded} /></dd>
+            <dd className="fact-figure">{figure(totals?.refunded)}</dd>
           </div>
           <div className="fact">
             <dt className="label muted">Vaults</dt>
-            <dd className="fact-figure tabular-nums">{totals.count}</dd>
+            <dd className="fact-figure tabular-nums">{totals ? totals.count : "…"}</dd>
           </div>
         </dl>
+      )}
+      {pending && (
+        <>
+          <div className="card h-72"><Loading show /></div>
+          <div className="card h-72" aria-hidden="true" />
+        </>
       )}
       {rows.data?.length === 0 && <p className="text-sm">No vaults name this university yet.</p>}
       {rows.data?.map(({ proof: p, vault: v }) => {
         const outcome = outcomeOf(p.status, v.contributors);
         return (
-          <Card key={p.vault} title={`Student ${shortAddress(p.student)}, deadline ${formatDeadline(p.deadline)}`}>
+          <Card key={p.vault} title={`Student ${shortAddress(p.student)}`}>
             <dl className="listing text-sm">
               <div className="listing-row">
                 <dt>Status</dt>
                 <dd><StatusBadge status={p.status} /> {OUTCOME_TEXT[outcome].title}</dd>
               </div>
+              <div className="listing-row"><dt>Deadline</dt><dd>{formatDeadline(p.deadline)}</dd></div>
               <div className="listing-row"><dt>Held now</dt><dd><Usdc micro={p.funds_held} /> (target <Usdc micro={p.target} />)</dd></div>
               <div className="listing-row">
                 <dt>Paid to you when</dt>
                 <dd>
-                  <NamedAddress address={p.attestor} /> confirms the visa before {formatDeadline(p.deadline)} with at least{" "}
+                  <NamedAddress address={p.attestor} /> confirms the visa before the deadline with at least{" "}
                   <Usdc micro={p.target} /> held. Otherwise every funder is refunded.
                 </dd>
               </div>
               <div className="listing-row"><dt>Student</dt><dd><AddressLink address={p.student} /></dd></div>
             </dl>
-            <Link className="link mt-3 inline-block text-sm" href={`/vault/${p.vault}`}>Open this deposit</Link>
+            <Link className="link mt-2 inline-block py-1 text-sm" href={`/vault/${p.vault}`}>Open this deposit</Link>
           </Card>
         );
       })}

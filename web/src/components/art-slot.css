@@ -1,0 +1,21 @@
+/* Illustration slot. Fallbacks match tokens-bell-jar.css until globals.css carries the tokens. */
+.art-slot { position: relative; width: 100%; overflow: hidden; }
+.art-slot img { object-fit: cover; }
+.art-slot-empty {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: var(--color-surface, #ece8dd);
+}
+/* A bell jar over one gold coin, drawn in CSS so the page looks intended before the art lands. */
+.art-slot-jar {
+  position: relative; width: min(22%, 160px); aspect-ratio: 3 / 4;
+  border: 3px solid var(--color-ink, #151d30); border-bottom: 0;
+  border-radius: 999px 999px 0 0; opacity: 0.85;
+}
+.art-slot-jar::before {
+  content: ""; position: absolute; left: 50%; bottom: 10%; width: 38%; aspect-ratio: 1;
+  transform: translateX(-50%); border-radius: 50%; background: var(--color-accent, #e0a526);
+}
+.art-slot-jar::after {
+  content: ""; position: absolute; left: -18%; right: -18%; bottom: -3px; height: 3px;
+  background: var(--color-ink, #151d30);
+}
