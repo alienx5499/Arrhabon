@@ -72,6 +72,7 @@ fn describe(done: &Done) -> String {
     match done {
         Done::Submitted(sig) => format!("submitted {}", sig.0),
         Done::AlreadyApplied => "already applied".into(),
+        Done::LeftForFunder => "left for the funder to claim (no token account)".into(),
     }
 }
 

@@ -4,9 +4,12 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, TransferChecked};
 use arrhabon_domain::Usdc;
 
-use crate::error::to_anchor;
+use crate::error::{ArrhabonError, to_anchor};
 use crate::events::Contributed;
-use crate::state::{CONTRIBUTION_SEED, Contribution, Vault, now};
+use crate::state::{
+    ATTESTOR_SEED, Attestor, CONTRIBUTION_SEED, Contribution, UNIVERSITY_SEED, University, Vault,
+    now,
+};
 
 #[derive(Accounts)]
 pub struct Contribute<'info> {
@@ -14,6 +17,20 @@ pub struct Contribute<'info> {
     pub funder: Signer<'info>,
     #[account(mut, has_one = mint)]
     pub vault: Account<'info, Vault>,
+    /// A deactivated university or attestor could never release this vault, so it takes no new
+    /// money; existing funders can still be refunded.
+    #[account(
+        seeds = [UNIVERSITY_SEED, vault.university.as_ref()],
+        bump = registered_university.bump,
+        constraint = registered_university.active @ ArrhabonError::UniversityInactive,
+    )]
+    pub registered_university: Account<'info, University>,
+    #[account(
+        seeds = [ATTESTOR_SEED, vault.attestor.as_ref()],
+        bump = registered_attestor.bump,
+        constraint = registered_attestor.active @ ArrhabonError::AttestorInactive,
+    )]
+    pub registered_attestor: Account<'info, Attestor>,
     #[account(
         init_if_needed,
         payer = funder,

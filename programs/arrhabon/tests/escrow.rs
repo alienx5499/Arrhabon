@@ -9,20 +9,20 @@ use common::*;
 fn release_pays_university_the_whole_total_and_closes() {
     let mut env = Env::new();
     let vault = env.create_vault(0);
-    let (a, b) = (env.funder(600_000_000), env.funder(500_000_000));
+    let (a, b) = (env.funder(600_000_000), env.funder(400_000_000));
     env.contribute(vault, &a, 600_000_000).unwrap();
-    env.contribute(vault, &b, 500_000_000).unwrap();
+    env.contribute(vault, &b, 400_000_000).unwrap();
     let university_ata = ata(&key(&env.university), &env.mint);
     env.token_account(university_ata, &key(&env.university), 7);
 
     let attestor = env.attestor.insecure_clone();
     env.confirm(vault, &attestor).unwrap();
 
-    assert_eq!(env.balance(&university_ata), 7 + 1_100_000_000);
+    assert_eq!(env.balance(&university_ata), 7 + 1_000_000_000);
     assert_eq!(env.balance(&ata(&vault, &env.mint)), 0);
     let v = env.vault(&vault);
     assert_eq!(v.status, Status::Closed);
-    assert_eq!(v.total_contributed, 1_100_000_000);
+    assert_eq!(v.total_contributed, 1_000_000_000);
     assert_eq!(v.contributor_count, 2);
 }
 
@@ -178,5 +178,19 @@ fn cancel_empty_vault_closes() {
     let vault = env.create_vault(0);
     let student = env.student.insecure_clone();
     env.cancel(vault, &student).unwrap();
+    assert_eq!(env.vault(&vault).status, Status::Closed);
+}
+
+#[test]
+fn cancel_with_outside_contributions_refunds_every_funder() {
+    let mut env = Env::new();
+    let vault = env.create_vault(0);
+    let a = env.funder(10 * USDC);
+    env.contribute(vault, &a, 10 * USDC).unwrap();
+    let student = env.student.insecure_clone();
+    env.cancel(vault, &student).unwrap();
+    assert_eq!(env.vault(&vault).status, Status::Refunding);
+    env.refund(vault, key(&a), &student).unwrap();
+    assert_eq!(env.balance(&ata(&key(&a), &env.mint)), 10 * USDC);
     assert_eq!(env.vault(&vault).status, Status::Closed);
 }

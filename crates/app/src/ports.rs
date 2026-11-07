@@ -102,6 +102,8 @@ pub trait VaultLedger: Send + Sync {
     ) -> impl Future<Output = PortResult<Vec<Vault>>> + Send;
     /// Unrefunded contributions of Refunding vaults.
     fn pending_refunds(&self) -> impl Future<Output = PortResult<Vec<Contribution>>> + Send;
+    /// Whether `owner` already has a USDC token account at its associated address.
+    fn has_token_account(&self, owner: AccountId) -> impl Future<Output = PortResult<bool>> + Send;
 
     /// Signed by the student.
     fn build_create_vault(

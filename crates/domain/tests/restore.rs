@@ -19,7 +19,7 @@ fn parts() -> VaultParts {
         refunded_total: usdc(600),
         contributor_count: 2,
         refunded_count: 1,
-        has_outside_contributions: true,
+        closed_contributions: 0,
     }
 }
 
@@ -39,7 +39,7 @@ fn from_parts_loads_consistent_state() {
     assert_eq!(v.status(), VaultStatus::Refunding);
     assert_eq!(v.refunded_total(), usdc(600));
     assert_eq!(v.refunded_count(), 1);
-    assert!(v.has_outside_contributions());
+    assert_eq!(v.closed_contributions(), 0);
 }
 
 #[test]
@@ -199,4 +199,42 @@ fn contribution_from_parts_loads_and_validates() {
         Contribution::from_parts(VAULT, AccountId([0; 32]), usdc(1), false),
         Err(DomainError::InvalidParties)
     );
+}
+
+#[test]
+fn from_parts_rejects_total_above_target() {
+    corrupt(VaultParts {
+        target: usdc(999),
+        ..parts()
+    });
+}
+
+#[test]
+fn from_parts_rejects_more_closed_contributions_than_settled() {
+    assert!(
+        Vault::from_parts(VaultParts {
+            closed_contributions: 1,
+            ..parts()
+        })
+        .is_ok()
+    );
+    // Refunding: only the one refunded contribution may be closed.
+    corrupt(VaultParts {
+        closed_contributions: 2,
+        ..parts()
+    });
+    corrupt(VaultParts {
+        status: VaultStatus::Open,
+        refunded_total: Usdc::ZERO,
+        refunded_count: 0,
+        closed_contributions: 1,
+        ..parts()
+    });
+    corrupt(VaultParts {
+        status: VaultStatus::Closed,
+        refunded_total: usdc(1_000),
+        refunded_count: 2,
+        closed_contributions: 3,
+        ..parts()
+    });
 }

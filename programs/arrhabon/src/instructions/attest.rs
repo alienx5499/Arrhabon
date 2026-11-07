@@ -5,9 +5,9 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use super::pay_from_vault;
-use crate::error::to_anchor;
+use crate::error::{ArrhabonError, to_anchor};
 use crate::events::{RefundReason, RefundsStarted, Released};
-use crate::state::{Vault, id, now};
+use crate::state::{ATTESTOR_SEED, Attestor, UNIVERSITY_SEED, University, Vault, id, now};
 
 #[derive(Accounts)]
 pub struct ConfirmVisa<'info> {
@@ -18,6 +18,19 @@ pub struct ConfirmVisa<'info> {
     pub vault: Account<'info, Vault>,
     /// CHECK: only used as the ATA authority; pinned to `vault.university` by `has_one`.
     pub university: UncheckedAccount<'info>,
+    /// Deactivating a party stops it from releasing existing vaults too; refunds never need it.
+    #[account(
+        seeds = [UNIVERSITY_SEED, vault.university.as_ref()],
+        bump = registered_university.bump,
+        constraint = registered_university.active @ ArrhabonError::UniversityInactive,
+    )]
+    pub registered_university: Account<'info, University>,
+    #[account(
+        seeds = [ATTESTOR_SEED, vault.attestor.as_ref()],
+        bump = registered_attestor.bump,
+        constraint = registered_attestor.active @ ArrhabonError::AttestorInactive,
+    )]
+    pub registered_attestor: Account<'info, Attestor>,
     pub mint: Account<'info, Mint>,
     #[account(
         mut,

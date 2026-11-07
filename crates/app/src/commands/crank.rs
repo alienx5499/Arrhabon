@@ -15,6 +15,9 @@ pub enum Done {
     Submitted(TxSignature),
     /// The chain already showed the effect (an earlier run, or someone else's crank).
     AlreadyApplied,
+    /// Skipped: the funder has no token account, so refunding would make the crank pay its
+    /// rent. The refund stays claimable; the funder calls `refund` themselves.
+    LeftForFunder,
 }
 
 /// Per-item result of a crank run; one failure never stops the others.
@@ -83,7 +86,11 @@ impl RunRefunds {
                 vault: c.vault(),
                 funder: c.funder(),
             };
-            let result = done(ledger.refund(item.vault, item.funder).await);
+            let result = match ledger.has_token_account(item.funder).await {
+                Ok(true) => done(ledger.refund(item.vault, item.funder).await),
+                Ok(false) => Ok(Done::LeftForFunder),
+                Err(e) => Err(e.into()),
+            };
             outcomes.push(Outcome { item, result });
         }
         Ok(outcomes)

@@ -28,6 +28,7 @@ pub(super) struct State {
     pub universities: BTreeSet<AccountId>,
     pub attestors: BTreeSet<AccountId>,
     pub failing: BTreeSet<AccountId>,
+    pub without_token_account: BTreeSet<AccountId>,
     sent: u64,
 }
 

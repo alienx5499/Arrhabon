@@ -89,7 +89,7 @@ impl CreateVault<'_> {
             refunded_total: 0,
             contributor_count: 0,
             refunded_count: 0,
-            has_outside_contributions: false,
+            closed_contributions: 0,
             bump,
         });
         self.vault.store(&created);

@@ -53,6 +53,11 @@ impl FakeLedger {
         self.lock().failing.insert(account);
     }
 
+    /// `owner` has no USDC token account (every other account has one).
+    pub fn without_token_account(&self, owner: AccountId) {
+        self.lock().without_token_account.insert(owner);
+    }
+
     /// From now on, port reads return the current state while writes keep changing it.
     pub fn freeze_reads(&self) {
         let mut s = self.lock();
@@ -165,6 +170,10 @@ impl VaultLedger for FakeLedger {
             .map(Vault::id)
             .collect();
         Ok(self.contributions_where(|c| !c.refunded() && refunding.contains(&c.vault())))
+    }
+
+    async fn has_token_account(&self, owner: AccountId) -> PortResult<bool> {
+        Ok(!self.lock().without_token_account.contains(&owner))
     }
 
     async fn build_create_vault(&self, vault: NewVault) -> PortResult<BuiltVault> {

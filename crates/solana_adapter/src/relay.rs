@@ -42,10 +42,11 @@ pub fn check_programs(tx: &Transaction) -> PortResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::accounts::tests::pk;
+    use crate::accounts::tests::{pk, stored_vault};
     use crate::instructions::{contribute, vault_pda};
     use anchor_client::Instruction;
     use anchor_spl::associated_token;
+    use arrhabon::state::Status;
 
     fn tx(ixs: &[Instruction]) -> Transaction {
         Transaction::new_with_payer(ixs, Some(&pk(5)))
@@ -61,14 +62,14 @@ mod tests {
 
     #[test]
     fn program_and_compute_budget_instructions_are_relayed() {
-        let ix = contribute(vault_pda(&pk(1), 0), pk(5), pk(4), 1);
+        let ix = contribute(vault_pda(&pk(1), 0), &stored_vault(Status::Open), pk(5), 1);
         assert_eq!(check_programs(&tx(std::slice::from_ref(&ix))), Ok(()));
         assert_eq!(check_programs(&tx(&[other(COMPUTE_BUDGET), ix])), Ok(()));
     }
 
     #[test]
     fn foreign_programs_and_bare_compute_budget_are_refused() {
-        let ix = contribute(vault_pda(&pk(1), 0), pk(5), pk(4), 1);
+        let ix = contribute(vault_pda(&pk(1), 0), &stored_vault(Status::Open), pk(5), 1);
         let system = anchor_lang::solana_program::system_program::ID;
         for foreign in [system, associated_token::ID, anchor_spl::token::ID] {
             let res = check_programs(&tx(&[ix.clone(), other(foreign)]));

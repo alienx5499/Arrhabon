@@ -17,7 +17,6 @@ pub enum ArrhabonError {
     Unauthorized,
     AlreadyRefunded,
     NothingToRefund,
-    OutsideContributions,
     ContributionMismatch,
     WrongVault,
     InvalidParties,
@@ -30,6 +29,10 @@ pub enum ArrhabonError {
     MintMismatch,
     UniversityInactive,
     AttestorInactive,
+    ExceedsTarget,
+    NotClosed,
+    BalanceRemaining,
+    ContributionsOpen,
 }
 
 pub fn to_anchor(e: DomainError) -> Error {
@@ -46,13 +49,16 @@ pub fn to_anchor(e: DomainError) -> Error {
         DomainError::Unauthorized => ArrhabonError::Unauthorized,
         DomainError::AlreadyRefunded => ArrhabonError::AlreadyRefunded,
         DomainError::NothingToRefund => ArrhabonError::NothingToRefund,
-        DomainError::OutsideContributions => ArrhabonError::OutsideContributions,
         DomainError::ContributionMismatch => ArrhabonError::ContributionMismatch,
         DomainError::WrongVault => ArrhabonError::WrongVault,
         DomainError::InvalidParties => ArrhabonError::InvalidParties,
         DomainError::CorruptState => ArrhabonError::CorruptState,
         DomainError::DeadlineTooFar => ArrhabonError::DeadlineTooFar,
         DomainError::BelowMinimum => ArrhabonError::BelowMinimum,
+        DomainError::ExceedsTarget => ArrhabonError::ExceedsTarget,
+        DomainError::NotClosed => ArrhabonError::NotClosed,
+        DomainError::BalanceRemaining => ArrhabonError::BalanceRemaining,
+        DomainError::ContributionsOpen => ArrhabonError::ContributionsOpen,
     }
     .into()
 }

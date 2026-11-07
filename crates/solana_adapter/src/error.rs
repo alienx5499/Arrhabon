@@ -8,7 +8,7 @@ use arrhabon_app::PortError;
 use arrhabon_domain::DomainError;
 
 /// Every domain rule; the program's `to_anchor` is the single code mapping.
-const ALL: [DomainError; 19] = {
+const ALL: [DomainError; 22] = {
     use DomainError::*;
     [
         ZeroAmount,
@@ -23,13 +23,16 @@ const ALL: [DomainError; 19] = {
         Unauthorized,
         AlreadyRefunded,
         NothingToRefund,
-        OutsideContributions,
         ContributionMismatch,
         WrongVault,
         InvalidParties,
         CorruptState,
         DeadlineTooFar,
         BelowMinimum,
+        ExceedsTarget,
+        NotClosed,
+        BalanceRemaining,
+        ContributionsOpen,
     ]
 };
 

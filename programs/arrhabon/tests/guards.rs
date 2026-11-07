@@ -123,16 +123,6 @@ fn cancel_by_non_student_rejected() {
 }
 
 #[test]
-fn cancel_after_outside_contribution_rejected() {
-    let mut env = Env::new();
-    let vault = env.create_vault(0);
-    let a = env.funder(10 * USDC);
-    env.contribute(vault, &a, 10 * USDC).unwrap();
-    let student = env.student.insecure_clone();
-    assert_rejected(env.cancel(vault, &student), "OutsideContributions");
-}
-
-#[test]
 fn create_rejects_invalid_terms() {
     let mut env = Env::new();
     assert_rejected(env.try_create_vault(0, 0, DEADLINE), "ZeroAmount");

@@ -173,6 +173,7 @@ fn report<E: std::fmt::Debug>(
     match r {
         Ok(Done::Submitted(sig)) => step(net, &tag, &sig.0),
         Ok(Done::AlreadyApplied) => println!("{tag:<28} already applied"),
+        Ok(Done::LeftForFunder) => println!("{tag:<28} left for the funder to claim"),
         Err(e) => println!("{tag:<28} failed: {e:?}"),
     }
 }

@@ -54,7 +54,7 @@ pub fn vault(key: &Pubkey, v: &state::Vault) -> Result<Vault, PortError> {
         refunded_total: Usdc::new(v.refunded_total),
         contributor_count: v.contributor_count,
         refunded_count: v.refunded_count,
-        has_outside_contributions: v.has_outside_contributions,
+        closed_contributions: v.closed_contributions,
     })
     .map_err(corrupt)
 }
@@ -88,7 +88,7 @@ pub(crate) mod tests {
             refunded_total: 0,
             contributor_count: 0,
             refunded_count: 0,
-            has_outside_contributions: false,
+            closed_contributions: 0,
             bump: 255,
         }
     }

@@ -37,7 +37,7 @@ pub struct Vault {
     pub refunded_total: u64,
     pub contributor_count: u32,
     pub refunded_count: u32,
-    pub has_outside_contributions: bool,
+    pub closed_contributions: u32,
     pub bump: u8,
 }
 
@@ -102,7 +102,7 @@ impl Vault {
             refunded_total: Usdc::new(self.refunded_total),
             contributor_count: self.contributor_count,
             refunded_count: self.refunded_count,
-            has_outside_contributions: self.has_outside_contributions,
+            closed_contributions: self.closed_contributions,
         })
         .map_err(to_anchor)
     }
@@ -114,7 +114,7 @@ impl Vault {
         self.refunded_total = v.refunded_total().micro();
         self.contributor_count = v.contributor_count();
         self.refunded_count = v.refunded_count();
-        self.has_outside_contributions = v.has_outside_contributions();
+        self.closed_contributions = v.closed_contributions();
     }
 }
 

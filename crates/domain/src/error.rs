@@ -14,7 +14,6 @@ pub enum DomainError {
     Unauthorized,
     AlreadyRefunded,
     NothingToRefund,
-    OutsideContributions,
     ContributionMismatch,
     /// The Contribution belongs to a different vault.
     WrongVault,
@@ -26,4 +25,12 @@ pub enum DomainError {
     DeadlineTooFar,
     /// Contribution smaller than `MIN_CONTRIBUTION`.
     BelowMinimum,
+    /// Contribution larger than what is left to reach the target.
+    ExceedsTarget,
+    /// The vault is not Closed yet.
+    NotClosed,
+    /// The vault token account still holds tokens.
+    BalanceRemaining,
+    /// A Contribution account of the vault is still open.
+    ContributionsOpen,
 }

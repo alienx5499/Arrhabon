@@ -78,4 +78,16 @@ pub mod arrhabon {
     pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
         ctx.accounts.apply()
     }
+
+    pub fn sweep(ctx: Context<Sweep>) -> Result<()> {
+        ctx.accounts.apply()
+    }
+
+    pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {
+        ctx.accounts.apply()
+    }
+
+    pub fn close_contribution(ctx: Context<CloseContribution>) -> Result<()> {
+        ctx.accounts.apply()
+    }
 }

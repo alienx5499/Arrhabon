@@ -63,12 +63,12 @@ impl From<DomainError> for AppError {
         use DomainError::*;
         match e {
             Unauthorized => AppError::Forbidden(e),
-            ZeroAmount | Overflow | BelowMinimum | InvalidParties | DeadlineTooFar | WrongVault => {
-                AppError::Invalid(e)
-            }
+            ZeroAmount | Overflow | BelowMinimum | ExceedsTarget | InvalidParties
+            | DeadlineTooFar | WrongVault => AppError::Invalid(e),
             Underflow | DeadlinePassed | DeadlineNotReached | NotOpen | NotRefunding
             | NotReleased | BelowTarget | AlreadyRefunded | NothingToRefund
-            | OutsideContributions | ContributionMismatch | CorruptState => AppError::Conflict(e),
+            | ContributionMismatch | CorruptState | NotClosed | BalanceRemaining
+            | ContributionsOpen => AppError::Conflict(e),
         }
     }
 }

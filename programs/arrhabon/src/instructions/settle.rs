@@ -1,4 +1,4 @@
-//! `expire` (anyone, after the deadline) and `cancel` (student, no outside money): start refunds.
+//! `expire` (anyone, after the deadline) and `cancel` (student, while Open): start refunds.
 
 use anchor_lang::prelude::*;
 

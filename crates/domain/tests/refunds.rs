@@ -18,7 +18,7 @@ fn vault_with(amounts: &[u64]) -> (Vault, Vec<Contribution>) {
         STUDENT,
         UNIVERSITY,
         ATTESTOR,
-        Usdc::new(1),
+        Usdc::new(u64::MAX),
         Deadline::new(100),
         0,
     )

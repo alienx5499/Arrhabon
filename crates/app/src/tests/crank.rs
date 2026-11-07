@@ -128,3 +128,32 @@ fn run_refunds_rerun_on_a_stale_read_counts_as_done() {
     assert_eq!(rerun.len(), 2);
     assert!(rerun.iter().all(|o| o.result == Ok(Done::AlreadyApplied)));
 }
+
+#[test]
+fn run_refunds_leaves_funders_without_a_token_account_to_claim_themselves() {
+    let (clock, ledger) = setup();
+    let a = seed_vault(&ledger, 1, DUE, &[(AUNT, 300), (UNCLE, 200)]);
+    run(ExpireDue.execute(&ledger, &clock)).unwrap();
+    // Refunding UNCLE would make the crank pay rent for a new token account.
+    ledger.without_token_account(UNCLE);
+
+    let outcomes = run(RunRefunds.execute(&ledger)).unwrap();
+    let key = |funder| RefundKey { vault: a, funder };
+    assert_eq!(
+        outcomes,
+        vec![
+            Outcome {
+                item: key(AUNT),
+                result: sent(2)
+            },
+            Outcome {
+                item: key(UNCLE),
+                result: Ok(Done::LeftForFunder)
+            },
+        ]
+    );
+    assert_eq!(
+        ledger.stored_vault(a).unwrap().status(),
+        VaultStatus::Refunding
+    );
+}

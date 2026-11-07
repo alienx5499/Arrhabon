@@ -52,3 +52,12 @@ pub struct Refunded {
     pub amount: u64,
     pub status: Status,
 }
+
+/// Tokens sent to a Closed vault outside `contribute`: to the university after a release,
+/// to the student after refunds.
+#[event]
+pub struct Swept {
+    pub vault: Pubkey,
+    pub recipient: Pubkey,
+    pub amount: u64,
+}

@@ -21,20 +21,21 @@ Universities take tuition deposits before the visa decision, and when the visa i
 3. Visa issued: the attestor confirms and the whole vault goes to the university in one transaction.
 4. Visa denied, or the deadline passes with no decision: the vault switches to refunding, and anyone (our crank, the funder, a stranger) can trigger each funder's refund.
 
-The program also has `cancel` (the student withdraws a vault before anyone else has contributed); this version does not expose it in the API or the web app.
+The program also has `cancel` (the student withdraws a vault while it is open; every funder is then refunded in full); this version does not expose it in the API or the web app.
 
 Three views in the web app: student (create a vault, share the link), funder (contribute, see your share and refund status), university (proof that funds are held and the release condition).
 
 ## How Solana enforces it
 
 - **Custody in a PDA.** USDC sits in a token account owned by the vault's program-derived address. No private key can move it; only the program's instructions can.
-- **Two exits only.** Money leaves the vault to the university's token account after `confirm_visa`, or to recorded funders after the vault is `Refunding`. There is no instruction that sends it anywhere else, including to the operator.
-- **Release only after attestation.** `confirm_visa` must be signed by the vault's attestor, the vault must be open and fully funded, and it fails after the deadline.
-- **Permissionless expiry and refund.** `expire` and `refund` need no special signer. If our backend disappears, a funder can still call them. Each funder has one `Contribution` account, so refunds never loop over an unbounded list, and a refunded contribution cannot be refunded twice.
+- **Two exits only.** Money leaves the vault to the university's token account after `confirm_visa`, or to recorded funders after the vault is `Refunding`. There is no instruction that sends it anywhere else, including to the operator. The one exception is `sweep`: once a vault is Closed, anyone can move tokens that were sent to it directly (outside `contribute`) to whoever they would have reached. After a release that is the university, as `confirm_visa` would have paid them; after refunds it is the student.
+- **Release only after attestation.** `confirm_visa` must be signed by the vault's attestor, the vault must be open and fully funded, both the attestor and the university must still be active in the registry, and it fails after the deadline.
+- **Permissionless expiry and refund.** `expire` and `refund` need no special signer. If our backend disappears, a funder can still call them. Each funder has one `Contribution` account, so refunds never loop over an unbounded list, and a refunded contribution cannot be refunded twice. My crank skips any funder who has no USDC token account yet, so it never pays rent to create one; that refund stays open for the funder to claim by calling `refund`.
 - **Registry.** Universities and attestors must be registered and active in an on-chain registry. A student cannot name themselves (or a friend) as attestor, and the student, university and attestor must be three distinct parties.
 - **Legacy SPL Token only.** The mint is fixed in the program's Config and must be a 6-decimal legacy SPL Token mint; Token-2022 mints (with their transfer hooks and fees) are rejected.
 - **Deadline cap.** A deadline can be at most 365 days ahead, so money cannot be parked forever.
-- **1 USDC minimum** per contribution, so nobody can spam a vault with dust contributions.
+- **1 USDC minimum** per contribution, so nobody can spam a vault with dust contributions. A contribution can never push a vault past its target: anything above the remaining amount is rejected (never silently trimmed), and when less than 1 USDC remains, exactly that remainder is accepted.
+- **Rent comes back.** Once a contribution is refunded (or its vault released), anyone can close its `Contribution` account and the rent goes to that funder. The student can then close the vault and its token account (only when the token balance is zero and every `Contribution` account is closed) and gets both rents back.
 
 The rules live once, in the pure `domain` crate. The on-chain program calls the same transitions the off-chain code uses, and LiteSVM tests with clock warp check the money paths on the compiled program.
 
@@ -42,7 +43,7 @@ The rules live once, in the pure `domain` crate. The on-chain program calls the 
 
 - **The attestor is the one trust point.** Someone has to say whether the visa was issued, and the program cannot check that by itself. A dishonest attestor could release a vault for a student whose visa was refused (only if fully funded and before the deadline), or deny a visa that was issued (the money then goes back to the funders, never to the attestor). In the demo the attestor is a clearly labelled demo key. The production path is the university's admissions office together with the student as a multisig, or a licensed agent.
 - **Never enable `DEMO_ATTESTOR=true` on a public deployment.** It lets anyone call `POST /demo/attest` and confirm or deny any vault that names the demo attestor. The demo deployment turns it on only for the recording. A production attestor is a separate registered party that signs with its own key, outside this API.
-- **Registry admin = program upgrade authority.** Only the program's upgrade authority can initialise Config, and it becomes the admin that registers and deactivates universities and attestors. Today that is one project key. The admin cannot move money in a vault; it can stop new vaults from naming a deactivated party.
+- **Registry admin = program upgrade authority.** Only the program's upgrade authority can initialise Config, and it becomes the admin that registers and deactivates universities and attestors. Today that is one project key. The admin cannot move money in a vault. Deactivating a party stops new vaults from naming it, stops `confirm_visa` on existing vaults that name it, and stops new contributions to vaults naming a deactivated university or attestor (that vault could never be released). Deny, expiry, cancel and refunds never check the registry, so deactivation can never block a refund.
 - **The program is upgradeable for now.** An upgrade authority can replace the program code, so for now you are also trusting whoever holds that key. Freezing the upgrade authority (or moving it to a multisig) is the step before real money.
 - **Devnet only.** The deployed program runs on devnet with a test USDC mint. Nothing here has been audited.
 
@@ -189,22 +190,23 @@ Web (`web/`):
 ## Testing
 
 ```sh
-anchor build            # program tests load target/deploy/arrhabon.so
+scripts/test.sh         # anchor build, then cargo test --workspace
+anchor build            # program tests load target/deploy/arrhabon.so and fail if it is older than the sources
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cd web && pnpm test
 ```
 
-`cargo test --workspace` runs 218 tests:
+`cargo test --workspace` runs 259 tests:
 
 | Crate | Tests |
 |---|---|
-| `arrhabon-domain` | 68 (unit and property tests of every invariant) |
-| `arrhabon` (program, LiteSVM with clock warp) | 46 |
-| `arrhabon-app` | 29 |
+| `arrhabon-domain` | 83 (unit and property tests of every invariant) |
+| `arrhabon` (program, LiteSVM with clock warp) | 70 |
+| `arrhabon-app` | 30 |
 | `arrhabon-api` | 27 |
-| `arrhabon-solana-adapter` | 24 |
+| `arrhabon-solana-adapter` | 35 |
 | `arrhabon-aurora-adapter` | 14, plus 1 ignored live dry-quote test (`cargo test -p arrhabon-aurora-adapter -- --ignored`) |
 
 ## Regulation and tax notes

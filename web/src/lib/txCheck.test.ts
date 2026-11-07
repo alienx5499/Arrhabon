@@ -26,13 +26,13 @@ const VAULT = "7M8Y5ibjuMG7hwmZfPnNqNP67FPhnRD9Y7MiK7A98r42";
 
 // Unsigned legacy transactions from the API's Rust builder (crates/solana_adapter instructions::unsigned_tx) for
 // student/funder WALLET, nonce 1762000000000, university UNIVERSITY, attestor OTHER, target 1,000 USDC,
-// deadline 1767225600, contribution 250 USDC, devnet USDC mint, zero blockhash.
+// deadline 1767225600, contribution 250 USDC to a vault naming UNIVERSITY and attestor OTHER, devnet USDC mint, zero blockhash.
 const hex = (h: string) => Uint8Array.from(h.match(/../g)!, (b) => parseInt(b, 16));
 const API_CREATE = hex(
   "01" + "00".repeat(64) + "0100080b850f2d6e02a47af824d09ab69dc42d70cb28cbfa249fb7ee57b9d256c12762ef5e4e4233157692be3738a5cf1ca2769c432faa890cc075ad065a7cf47cc60a4bc72cb5fdb4df3bff667717604388c6606e6880464405c6dfb9166c3ae5868b26000000000000000000000000000000000000000000000000000000000000000006ddf6e1d765a193d9cbe146ceeb79ac1cb485ed5f5b37913a8cf5857eff00a93b442cb3912157f13a933d0134282d032b5ffecd01a2dbf1b7790608df002ea756579a67d2eb52efac1a4e789130d1f78b1d4c5e28254d7484967542e7a2f96359cfc6476010994be06ba7a734705a245a5e38ccc5c038a866dccaa80b9f483368f6ff4fc70c385c4f103fe9ac5288516971d4bfa75146421c8d915d9fa8df618c97258f4e2489f1bb3d1029148e0d830b5a1399daff1084048e7bd8dbe9f859a0573c089880f6549bb54a9702b95b71ba9755325ff5ffa27d7ed25b4b282abe000000000000000000000000000000000000000000000000000000000000000001060a00010a07080502040903601dedf7d0c15236870054623f9a0100005c9e9d5fa309864acd7d8118d326313cde7b86df18e197924a03186ffe9f3d7a321cfa5add185e8893a5fd88013ec4d7e122ded46354cadff50d956395e75b6000ca9a3b0000000000b9556900000000",
 );
 const API_CONTRIBUTE = hex(
-  "01" + "00".repeat(64) + "01000409850f2d6e02a47af824d09ab69dc42d70cb28cbfa249fb7ee57b9d256c12762ef400e79133ce242e1b4343c40f0c372e25d75747a61ec08abd9118815250bdabd5e4e4233157692be3738a5cf1ca2769c432faa890cc075ad065a7cf47cc60a4bc72cb5fdb4df3bff667717604388c6606e6880464405c6dfb9166c3ae5868b26cd339f0c7009570d58aa11590a98bc2850b01b0e2ff88d918e464f81efd1c1fd000000000000000000000000000000000000000000000000000000000000000006ddf6e1d765a193d9cbe146ceeb79ac1cb485ed5f5b37913a8cf5857eff00a93b442cb3912157f13a933d0134282d032b5ffecd01a2dbf1b7790608df002ea756579a67d2eb52efac1a4e789130d1f78b1d4c5e28254d7484967542e7a2f9630000000000000000000000000000000000000000000000000000000000000000010808000204070103060510522144832000cd5f80b2e60e00000000",
+  "01" + "00".repeat(64) + "0100060b850f2d6e02a47af824d09ab69dc42d70cb28cbfa249fb7ee57b9d256c12762ef400e79133ce242e1b4343c40f0c372e25d75747a61ec08abd9118815250bdabd5e4e4233157692be3738a5cf1ca2769c432faa890cc075ad065a7cf47cc60a4bc72cb5fdb4df3bff667717604388c6606e6880464405c6dfb9166c3ae5868b26cd339f0c7009570d58aa11590a98bc2850b01b0e2ff88d918e464f81efd1c1fd000000000000000000000000000000000000000000000000000000000000000006ddf6e1d765a193d9cbe146ceeb79ac1cb485ed5f5b37913a8cf5857eff00a93b442cb3912157f13a933d0134282d032b5ffecd01a2dbf1b7790608df002ea756579a67d2eb52efac1a4e789130d1f78b1d4c5e28254d7484967542e7a2f96359cfc6476010994be06ba7a734705a245a5e38ccc5c038a866dccaa80b9f483368f6ff4fc70c385c4f103fe9ac5288516971d4bfa75146421c8d915d9fa8df61000000000000000000000000000000000000000000000000000000000000000001080a0002090a04070103060510522144832000cd5f80b2e60e00000000",
 );
 
 const create = {
@@ -44,7 +44,7 @@ const create = {
   target: 1_000_000_000n,
   deadline: 1767225600n,
 } as const;
-const contribute = { action: "contribute", vault: VAULT, amount: 250_000_000n } as const;
+const contribute = { action: "contribute", vault: VAULT, university: UNIVERSITY, attestor: OTHER, amount: 250_000_000n } as const;
 
 /** The instructions inside an API transaction, to tamper with and recompile. */
 function ixsOf(bytes: Uint8Array) {
@@ -140,13 +140,30 @@ describe("checkTx: contribute", () => {
     await expect(checkTx(API_CONTRIBUTE, WALLET, { ...contribute, amount: 1n })).rejects.toThrow(/amount/);
   });
   it("refuses a funder token account that is not the funder's", async () => {
-    const bytes = tx(WALLET, [withAccount(arrhabon(API_CONTRIBUTE), 4, OTHER)]);
-    await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/account 4/);
+    const bytes = tx(WALLET, [withAccount(arrhabon(API_CONTRIBUTE), 6, OTHER)]);
+    await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/account 6/);
+  });
+  it("refuses a registry entry other than the vault university's", async () => {
+    const bytes = tx(WALLET, [withAccount(arrhabon(API_CONTRIBUTE), 2, OTHER)]);
+    await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/account 2/);
+    await expect(checkTx(API_CONTRIBUTE, WALLET, { ...contribute, university: OTHER })).rejects.toThrow(/account 2/);
+  });
+  it("refuses an attestor registry entry other than the vault attestor's", async () => {
+    const bytes = tx(WALLET, [withAccount(arrhabon(API_CONTRIBUTE), 3, UNIVERSITY)]);
+    await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/account 3/);
+    await expect(checkTx(API_CONTRIBUTE, WALLET, { ...contribute, attestor: WALLET })).rejects.toThrow(/account 3/);
+  });
+  it("refuses a writable registry entry", async () => {
+    const ix = arrhabon(API_CONTRIBUTE);
+    for (const i of [2, 3]) {
+      const bytes = tx(WALLET, [withAccount(ix, i, ix.accounts![i].address, AccountRole.WRITABLE)]);
+      await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/modify an account/);
+    }
   });
   it("refuses extra accounts on the instruction", async () => {
     const ix = arrhabon(API_CONTRIBUTE);
     const bytes = tx(WALLET, [{ ...ix, accounts: [...ix.accounts!, { address: address(OTHER), role: AccountRole.WRITABLE }] }]);
-    await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/passes 9 accounts/);
+    await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/passes 11 accounts/);
   });
   it("describes the intent in USDC", () => {
     expect(describeIntent(contribute)).toBe(`Contribute 250.00 USDC to vault ${VAULT}?`);
@@ -174,7 +191,7 @@ describe("checkTx: compute budget and envelope", () => {
   });
   it("refuses a different fee payer or an extra signer", async () => {
     await expect(checkTx(tx(OTHER, [arrhabon(API_CONTRIBUTE)]), WALLET, contribute)).rejects.toThrow(/fee payer/);
-    const ix = withAccount(arrhabon(API_CONTRIBUTE), 4, OTHER, AccountRole.READONLY_SIGNER);
+    const ix = withAccount(arrhabon(API_CONTRIBUTE), 6, OTHER, AccountRole.READONLY_SIGNER);
     await expect(checkTx(tx(WALLET, [ix]), WALLET, contribute)).rejects.toThrow(/signatures/);
   });
   it("refuses a foreign program or a second Arrhabon instruction", async () => {
@@ -185,7 +202,7 @@ describe("checkTx: compute budget and envelope", () => {
     await expect(checkTx(tx(WALLET, [unitLimit(1)]), WALLET, contribute)).rejects.toThrow(/found 0/);
   });
   it("refuses a program account marked writable", async () => {
-    const bytes = tx(WALLET, [withAccount(arrhabon(API_CONTRIBUTE), 7, SYSTEM, AccountRole.WRITABLE)]);
+    const bytes = tx(WALLET, [withAccount(arrhabon(API_CONTRIBUTE), 9, SYSTEM, AccountRole.WRITABLE)]);
     await expect(checkTx(bytes, WALLET, contribute)).rejects.toThrow(/modify an account/);
   });
   it("refuses the wrong action and garbage bytes", async () => {

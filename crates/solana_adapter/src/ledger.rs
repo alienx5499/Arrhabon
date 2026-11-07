@@ -6,6 +6,7 @@ use std::sync::Arc;
 use anchor_client::Signer;
 use anchor_client::compat::solana_transaction::Transaction;
 use anchor_lang::prelude::Pubkey;
+use anchor_spl::associated_token::get_associated_token_address;
 use arrhabon::state::{self, Status, id};
 use arrhabon_app::PortError;
 use arrhabon_app::ports::{
@@ -183,7 +184,8 @@ impl VaultLedger for SolanaLedger {
         funder: AccountId,
         amount: Usdc,
     ) -> PortResult<UnsignedTx> {
-        let ix = ixs::contribute(pk(vault), pk(funder), self.mint, amount.micro());
+        let stored = self.stored_vault(vault).await?;
+        let ix = ixs::contribute(pk(vault), &stored, pk(funder), amount.micro());
         self.chain.unsigned(&[ix], &pk(funder)).await
     }
 
@@ -201,6 +203,11 @@ impl VaultLedger for SolanaLedger {
             VisaOutcome::Denied => ixs::deny_visa(pk(vault), pk(attestor)),
         };
         self.chain.unsigned(&[ix], &pk(attestor)).await
+    }
+
+    async fn has_token_account(&self, owner: AccountId) -> PortResult<bool> {
+        let ata = get_associated_token_address(&pk(owner), &self.mint);
+        self.chain.has_data(&ata).await
     }
 
     async fn submit(&self, tx: SignedTx) -> PortResult<TxSignature> {

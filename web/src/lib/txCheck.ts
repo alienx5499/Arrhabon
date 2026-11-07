@@ -41,7 +41,14 @@ export type Intent =
       /** Unix seconds. */
       deadline: bigint;
     }
-  | { action: "contribute"; vault: string; amount: bigint };
+  | {
+      action: "contribute";
+      vault: string;
+      /** The vault's university and attestor, from the vault view; their registry entries must be the ones passed. */
+      university: string;
+      attestor: string;
+      amount: bigint;
+    };
 
 /** Confirm-dialog text shown before the wallet signs. */
 export function describeIntent(intent: Intent): string {
@@ -140,18 +147,25 @@ async function checkContribute(
   programId: string,
   refuse: Refuse,
 ): Promise<Expected> {
-  // accounts: funder, vault, contribution, mint, funder_token, vault_token, token_program, system_program; args: amount u64.
+  // accounts: funder, vault, registered_university, registered_attestor, contribution, mint, funder_token,
+  // vault_token, token_program, system_program; args: amount u64.
   if (accounts[1] !== intent.vault) refuse(`it contributes to vault ${accounts[1]}, not ${intent.vault}.`);
   const amount = readU64(data, 8);
   if (amount !== intent.amount) refuse(`the amount is ${amount} micro-USDC, not ${intent.amount}.`);
-  const mint = accounts[3] ?? refuse("the mint account is missing.");
-  const [contribution, funderToken, vaultToken] = await Promise.all([
+  const mint = accounts[5] ?? refuse("the mint account is missing.");
+  const [registeredUniversity, registeredAttestor, contribution, funderToken, vaultToken] = await Promise.all([
+    pda(["university", key(intent.university)], programId),
+    pda(["attestor", key(intent.attestor)], programId),
     pda(["contrib", key(intent.vault), key(wallet)], programId),
     ata(wallet, mint),
     ata(intent.vault, mint),
   ]);
   return {
-    accounts: [address(wallet), address(intent.vault), contribution, address(mint), funderToken, vaultToken, TOKEN_PROGRAM_ADDRESS, SYSTEM_PROGRAM_ADDRESS],
+    accounts: [
+      address(wallet), address(intent.vault), registeredUniversity, registeredAttestor, contribution, address(mint),
+      funderToken, vaultToken,
+      TOKEN_PROGRAM_ADDRESS, SYSTEM_PROGRAM_ADDRESS,
+    ],
     writable: new Set([wallet, intent.vault, contribution, funderToken, vaultToken]),
     dataLength: 8 + 8,
   };

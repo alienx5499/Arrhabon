@@ -177,3 +177,28 @@ fn confirm_pays_whole_token_balance_including_direct_transfers() {
     assert_eq!(env.balance(&ata(&vault, &env.mint)), 0);
     assert_eq!(env.vault(&vault).total_contributed, TARGET);
 }
+
+#[test]
+fn contribution_above_the_remainder_rejected() {
+    let mut env = Env::new();
+    let vault = env.create_vault(0);
+    let (a, b) = (env.funder(TARGET), env.funder(TARGET));
+    env.contribute(vault, &a, TARGET - 10 * USDC).unwrap();
+    assert_rejected(env.contribute(vault, &b, 10 * USDC + 1), "ExceedsTarget");
+    env.contribute(vault, &b, 10 * USDC).unwrap();
+    assert_eq!(env.vault(&vault).total_contributed, TARGET);
+    assert_rejected(env.contribute(vault, &a, USDC), "ExceedsTarget");
+    assert_eq!(env.balance(&ata(&vault, &env.mint)), TARGET);
+}
+
+#[test]
+fn remainder_below_minimum_may_be_paid_exactly() {
+    let mut env = Env::new();
+    let vault = env.create_vault(0);
+    let (a, b) = (env.funder(TARGET), env.funder(USDC));
+    let half = USDC / 2;
+    env.contribute(vault, &a, TARGET - half).unwrap();
+    assert_rejected(env.contribute(vault, &b, half - 1), "BelowMinimum");
+    env.contribute(vault, &b, half).unwrap();
+    assert_eq!(env.vault(&vault).total_contributed, TARGET);
+}

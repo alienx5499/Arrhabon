@@ -173,3 +173,98 @@ fn create_with_mint_other_than_config_mint_rejected() {
     accounts.vault_token = ata(&accounts.vault, &other);
     assert_rejected(env.send_create(0, terms, accounts), "MintMismatch");
 }
+
+/// A vault funded to the target by one funder.
+fn funded() -> (Env, Pubkey) {
+    let mut env = Env::new();
+    let vault = env.create_vault(0);
+    let a = env.funder(TARGET);
+    env.contribute(vault, &a, TARGET).unwrap();
+    (env, vault)
+}
+
+#[test]
+fn confirm_after_attestor_deactivated_rejected() {
+    let (mut env, vault) = funded();
+    let (admin, attestor) = (env.admin.insecure_clone(), env.attestor.insecure_clone());
+    env.set_attestor_active(&admin, key(&attestor), false)
+        .unwrap();
+    assert_rejected(env.confirm(vault, &attestor), "AttestorInactive");
+    assert_eq!(env.balance(&ata(&vault, &env.mint)), TARGET);
+}
+
+#[test]
+fn confirm_after_university_deactivated_rejected() {
+    let (mut env, vault) = funded();
+    let (admin, u) = (env.admin.insecure_clone(), key(&env.university));
+    env.set_university_active(&admin, u, false).unwrap();
+    let attestor = env.attestor.insecure_clone();
+    assert_rejected(env.confirm(vault, &attestor), "UniversityInactive");
+    assert_eq!(env.balance(&ata(&vault, &env.mint)), TARGET);
+}
+
+#[test]
+fn confirm_with_registry_entry_of_another_attestor_rejected() {
+    let (mut env, vault) = funded();
+    let admin = env.admin.insecure_clone();
+    let other = Pubkey::new_unique();
+    env.register_attestor(&admin, other).unwrap();
+    let attestor = env.attestor.insecure_clone();
+    let mut accounts = env.confirm_accounts(vault, &attestor, key(&env.university));
+    accounts.registered_attestor = attestor_pda(&other);
+    assert_rejected(env.send_confirm(accounts, &attestor), "ConstraintSeeds");
+}
+
+#[test]
+fn contribute_after_university_deactivated_rejected() {
+    let mut env = Env::new();
+    let vault = env.create_vault(0);
+    let (admin, u) = (env.admin.insecure_clone(), key(&env.university));
+    env.set_university_active(&admin, u, false).unwrap();
+    let a = env.funder(10 * USDC);
+    assert_rejected(env.contribute(vault, &a, 10 * USDC), "UniversityInactive");
+    assert_eq!(env.balance(&ata(&key(&a), &env.mint)), 10 * USDC);
+}
+
+/// Refunds must never be blockable by the registry.
+#[test]
+fn deny_expire_cancel_and_refund_work_after_deactivation() {
+    let mut env = Env::new();
+    let (denied, expired, cancelled) = (
+        env.create_vault(0),
+        env.create_vault(1),
+        env.create_vault(2),
+    );
+    let a = env.funder(30 * USDC);
+    for v in [denied, expired, cancelled] {
+        env.contribute(v, &a, 10 * USDC).unwrap();
+    }
+    let (admin, attestor, student) = (
+        env.admin.insecure_clone(),
+        env.attestor.insecure_clone(),
+        env.student.insecure_clone(),
+    );
+    let (u, at) = (key(&env.university), key(&attestor));
+    env.set_university_active(&admin, u, false).unwrap();
+    env.set_attestor_active(&admin, at, false).unwrap();
+
+    env.deny(denied, &attestor).unwrap();
+    env.cancel(cancelled, &student).unwrap();
+    env.warp(DEADLINE);
+    env.expire(expired, &a).unwrap();
+    for v in [denied, expired, cancelled] {
+        env.refund(v, key(&a), &a).unwrap();
+    }
+    assert_eq!(env.balance(&ata(&key(&a), &env.mint)), 30 * USDC);
+}
+
+#[test]
+fn contribute_after_attestor_deactivated_rejected() {
+    let mut env = Env::new();
+    let vault = env.create_vault(0);
+    let (admin, at) = (env.admin.insecure_clone(), key(&env.attestor));
+    env.set_attestor_active(&admin, at, false).unwrap();
+    let a = env.funder(10 * USDC);
+    assert_rejected(env.contribute(vault, &a, 10 * USDC), "AttestorInactive");
+    assert_eq!(env.balance(&ata(&key(&a), &env.mint)), 10 * USDC);
+}

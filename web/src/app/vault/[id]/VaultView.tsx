@@ -109,7 +109,13 @@ export function VaultView({ id, initial }: { id: string; initial: Vault | null }
           {/* Display only: the program enforces the deadline. */}
           {open && v.seconds_left > 0 ? (
             <>
-              <ContributeForm vault={id} hint={`At least 1 USDC. You can pay until ${fmtShort(v.deadline)}.`} onDone={refresh} />
+              <ContributeForm
+                vault={id}
+                university={v.university}
+                attestor={v.attestor}
+                hint={`At least 1 USDC (or the exact remainder), up to the ${formatUsdc(Math.max(v.target - v.total_contributed, 0))} USDC still needed. You can pay until ${fmtShort(v.deadline)}.`}
+                onDone={refresh}
+              />
               <p className="note">
                 Paying from another chain?{" "}
                 <a className="link" href="#quote" onClick={() => document.getElementById("quote")?.setAttribute("open", "")}>

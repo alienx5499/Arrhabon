@@ -41,10 +41,14 @@ fn create_rejects_deadline_not_in_future() {
 
 #[test]
 fn contribute_records_totals_and_counts_each_funder_once() {
-    let (mut v, mut mom, _) = funded();
+    let mut v = open_vault();
+    let mut mom = Contribution::new(VAULT, MOM);
+    let mut uncle = Contribution::new(VAULT, UNCLE);
+    v.contribute(&mut mom, usdc(300), NOW).unwrap();
+    v.contribute(&mut uncle, usdc(200), NOW).unwrap();
     v.contribute(&mut mom, usdc(50), NOW).unwrap();
-    assert_eq!(mom.amount(), usdc(650));
-    assert_eq!(v.total_contributed(), usdc(1_050));
+    assert_eq!(mom.amount(), usdc(350));
+    assert_eq!(v.total_contributed(), usdc(550));
     assert_eq!(v.contributor_count(), 2);
 }
 
@@ -67,20 +71,6 @@ fn contribute_after_deadline_is_rejected() {
         v.contribute(&mut c, usdc(1), DEADLINE),
         Err(DomainError::DeadlinePassed)
     );
-}
-
-#[test]
-fn contribute_overflow_leaves_state_unchanged() {
-    let mut v = open_vault();
-    let mut a = Contribution::new(VAULT, MOM);
-    let mut b = Contribution::new(VAULT, UNCLE);
-    v.contribute(&mut a, Usdc::new(u64::MAX), NOW).unwrap();
-    assert_eq!(
-        v.contribute(&mut b, usdc(1), NOW),
-        Err(DomainError::Overflow)
-    );
-    assert_eq!(b.amount(), Usdc::ZERO);
-    assert_eq!(v.contributor_count(), 1);
 }
 
 #[test]
@@ -217,10 +207,12 @@ fn cancel_by_student_with_only_own_funds() {
 }
 
 #[test]
-fn cancel_after_a_non_student_contribution_is_rejected() {
-    let (mut v, _, _) = funded();
-    assert_eq!(v.cancel(STUDENT), Err(DomainError::OutsideContributions));
-    assert_eq!(v.status(), VaultStatus::Open);
+fn cancel_with_outside_contributions_starts_refunds() {
+    let (mut v, mut mom, _) = funded();
+    v.cancel(STUDENT).unwrap();
+    assert_eq!(v.status(), VaultStatus::Refunding);
+    v.refund(&mut mom).unwrap();
+    assert_eq!(mom.amount(), usdc(600));
 }
 
 #[test]

@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 mod admin;
+mod close;
 mod ix;
 
 #[allow(unused_imports)]
@@ -22,6 +23,8 @@ use solana_instruction::{AccountMeta, Instruction};
 pub use solana_keypair::Keypair;
 use solana_signer::Signer;
 use solana_transaction::Transaction;
+use std::path::Path;
+use std::time::SystemTime;
 
 pub use anchor_lang::prelude::Pubkey;
 
@@ -34,6 +37,11 @@ const SO: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../target/deploy/arrhabon.so"
 );
+/// Sources the built program is compiled from; the .so must be newer than all of them.
+const SOURCES: [&str; 2] = [
+    concat!(env!("CARGO_MANIFEST_DIR"), "/src"),
+    concat!(env!("CARGO_MANIFEST_DIR"), "/../../crates/domain/src"),
+];
 const TOKEN_ACCOUNT_LEN: usize = 165;
 /// Upgradeable-loader ProgramData header: tag (4), slot (8), Option<authority> (1 + 32).
 const PROGRAMDATA_AUTHORITY: std::ops::Range<usize> = 12..45;
@@ -75,6 +83,36 @@ pub fn program_data() -> Pubkey {
     Pubkey::find_program_address(seeds, &bpf_loader_upgradeable::ID).0
 }
 
+fn modified(path: &Path) -> SystemTime {
+    path.metadata()
+        .and_then(|m| m.modified())
+        .expect("readable file")
+}
+
+/// Newest modification time of any file under `dir`.
+fn newest(dir: &Path) -> SystemTime {
+    let entries = std::fs::read_dir(dir).expect("source directory");
+    entries
+        .map(|e| e.expect("directory entry").path())
+        .map(|p| if p.is_dir() { newest(&p) } else { modified(&p) })
+        .max()
+        .unwrap_or(SystemTime::UNIX_EPOCH)
+}
+
+/// Tests run the built .so, so a source edit without `anchor build` would test old code.
+fn assert_fresh_build() {
+    assert!(
+        Path::new(SO).exists(),
+        "build first: anchor build (target/deploy/arrhabon.so)"
+    );
+    let newest_source = SOURCES.iter().map(|d| newest(Path::new(d))).max().unwrap();
+    assert!(
+        modified(Path::new(SO)) >= newest_source,
+        "target/deploy/arrhabon.so is older than programs/arrhabon/src or crates/domain/src: \
+         run anchor build first (scripts/test.sh does both)"
+    );
+}
+
 impl Env {
     /// Config initialised by the admin; university and attestor registered and active.
     pub fn new() -> Self {
@@ -89,6 +127,7 @@ impl Env {
 
     /// Program deployed with `admin` as upgrade authority; no Config, no registry.
     pub fn bare() -> Self {
+        assert_fresh_build();
         let mut svm = LiteSVM::new();
         svm.add_program_from_file(addr(&arrhabon::ID), SO)
             .expect("build first: anchor build (target/deploy/arrhabon.so)");
@@ -180,6 +219,10 @@ impl Env {
         self.svm
             .get_account(&addr(at))
             .is_some_and(|a| a.lamports > 0)
+    }
+
+    pub fn lamports(&self, at: &Pubkey) -> u64 {
+        self.svm.get_account(&addr(at)).map_or(0, |a| a.lamports)
     }
 
     pub fn balance(&self, at: &Pubkey) -> u64 {

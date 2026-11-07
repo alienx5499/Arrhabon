@@ -7,7 +7,9 @@ use anchor_lang::solana_program::{bpf_loader_upgradeable, system_program};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::associated_token::{self, get_associated_token_address};
 use anchor_spl::token;
-use arrhabon::state::{ATTESTOR_SEED, CONFIG_SEED, CONTRIBUTION_SEED, UNIVERSITY_SEED, VAULT_SEED};
+use arrhabon::state::{
+    self, ATTESTOR_SEED, CONFIG_SEED, CONTRIBUTION_SEED, UNIVERSITY_SEED, VAULT_SEED,
+};
 use arrhabon::{ID, accounts as acc, instruction as ix};
 
 fn pda(seeds: &[&[u8]]) -> Pubkey {
@@ -78,11 +80,20 @@ pub fn create_vault(t: VaultTerms, mint: Pubkey) -> Instruction {
     )
 }
 
-pub fn contribute(vault: Pubkey, funder: Pubkey, mint: Pubkey, amount: u64) -> Instruction {
+/// `stored` is the vault account at `vault`: its university and attestor must still be active.
+pub fn contribute(
+    vault: Pubkey,
+    stored: &state::Vault,
+    funder: Pubkey,
+    amount: u64,
+) -> Instruction {
+    let mint = stored.mint;
     build(
         acc::Contribute {
             funder,
             vault,
+            registered_university: university_pda(&stored.university),
+            registered_attestor: attestor_pda(&stored.attestor),
             contribution: contribution_pda(&vault, &funder),
             mint,
             funder_token: get_associated_token_address(&funder, &mint),
@@ -105,6 +116,8 @@ pub fn confirm_visa(
             attestor,
             vault,
             university,
+            registered_university: university_pda(&university),
+            registered_attestor: attestor_pda(&attestor),
             mint,
             vault_token: get_associated_token_address(&vault, &mint),
             university_token: get_associated_token_address(&university, &mint),
@@ -212,8 +225,9 @@ pub fn unsigned_tx(ixs: &[Instruction], payer: &Pubkey, blockhash: Hash) -> Vec<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::accounts::tests::pk;
+    use crate::accounts::tests::{pk, stored_vault};
     use anchor_lang::Discriminator;
+    use arrhabon::state::Status;
 
     #[test]
     fn unsigned_create_vault_is_paid_and_signed_by_the_student() {
@@ -242,11 +256,22 @@ mod tests {
     #[test]
     fn contribute_targets_the_funders_contribution_pda() {
         let vault = vault_pda(&pk(1), 0);
-        let i = contribute(vault, pk(5), pk(4), 2_000_000);
+        let stored = stored_vault(Status::Open);
+        let i = contribute(vault, &stored, pk(5), 2_000_000);
         assert_eq!(i.accounts[0].pubkey, pk(5));
         assert!(i.accounts[0].is_signer);
-        assert_eq!(i.accounts[2].pubkey, contribution_pda(&vault, &pk(5)));
+        assert_eq!(i.accounts[2].pubkey, university_pda(&pk(2)));
+        assert_eq!(i.accounts[3].pubkey, attestor_pda(&pk(3)));
+        assert_eq!(i.accounts[4].pubkey, contribution_pda(&vault, &pk(5)));
         assert_eq!(&i.data[8..], &2_000_000u64.to_le_bytes());
+    }
+
+    #[test]
+    fn confirm_visa_passes_the_vault_parties_registry_entries() {
+        let i = confirm_visa(vault_pda(&pk(1), 0), pk(3), pk(2), pk(4));
+        assert_eq!(i.accounts[3].pubkey, university_pda(&pk(2)));
+        assert_eq!(i.accounts[4].pubkey, attestor_pda(&pk(3)));
+        assert!(!i.accounts[3].is_writable && !i.accounts[4].is_writable);
     }
 
     #[test]

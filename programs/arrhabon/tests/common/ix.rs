@@ -87,6 +87,8 @@ impl Env {
         accounts::Contribute {
             funder: f,
             vault,
+            registered_university: university_pda(&key(&self.university)),
+            registered_attestor: attestor_pda(&key(&self.attestor)),
             contribution: contribution_pda(&vault, &f),
             mint: self.mint,
             funder_token: ata(&f, &self.mint),
@@ -142,6 +144,9 @@ impl Env {
             attestor: key(attestor),
             vault,
             university,
+            // Registry entries follow the vault's parties, as the program's seeds do.
+            registered_university: university_pda(&key(&self.university)),
+            registered_attestor: attestor_pda(&key(&self.attestor)),
             mint: self.mint,
             vault_token: ata(&vault, &self.mint),
             university_token: ata(&university, &self.mint),

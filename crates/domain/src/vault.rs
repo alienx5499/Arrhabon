@@ -3,6 +3,7 @@
 //! The Vault holds totals only; each transition takes the one Contribution it touches,
 //! so the program can apply it per instruction without loading every funder.
 
+mod close;
 mod contribution;
 mod restore;
 
@@ -38,8 +39,8 @@ pub struct Vault {
     refunded_total: Usdc,
     contributor_count: u32,
     refunded_count: u32,
-    /// Set once anyone other than the student contributes; blocks `cancel`.
-    has_outside_contributions: bool,
+    /// Contribution accounts closed after settlement; the Vault closes only once all are.
+    closed_contributions: u32,
 }
 
 impl Vault {
@@ -75,7 +76,7 @@ impl Vault {
             refunded_total: Usdc::ZERO,
             contributor_count: 0,
             refunded_count: 0,
-            has_outside_contributions: false,
+            closed_contributions: 0,
         })
     }
 
@@ -90,7 +91,12 @@ impl Vault {
         if amount.is_zero() {
             return Err(DomainError::ZeroAmount);
         }
-        if amount < MIN_CONTRIBUTION {
+        let remaining = self.target.checked_sub(self.total_contributed)?;
+        if amount > remaining {
+            return Err(DomainError::ExceedsTarget);
+        }
+        // A remainder below the minimum may still be paid exactly, so every vault can fill.
+        if amount < MIN_CONTRIBUTION && amount != remaining {
             return Err(DomainError::BelowMinimum);
         }
         let total = self.total_contributed.checked_add(amount)?;
@@ -104,7 +110,6 @@ impl Vault {
         };
         self.total_contributed = total;
         self.contributor_count = count;
-        self.has_outside_contributions |= contribution.funder != self.student;
         contribution.amount = own;
         Ok(())
     }
@@ -153,9 +158,6 @@ impl Vault {
             return Err(DomainError::Unauthorized);
         }
         self.ensure_open()?;
-        if self.has_outside_contributions {
-            return Err(DomainError::OutsideContributions);
-        }
         self.start_refunds();
         Ok(())
     }
@@ -274,8 +276,8 @@ impl Vault {
     pub fn refunded_count(&self) -> u32 {
         self.refunded_count
     }
-    pub fn has_outside_contributions(&self) -> bool {
-        self.has_outside_contributions
+    pub fn closed_contributions(&self) -> u32 {
+        self.closed_contributions
     }
 }
 

@@ -8,7 +8,19 @@ import { Problem } from "./parts";
 import { TxStatus } from "./ui";
 
 /** The pay form; the caller supplies the surrounding panel, heading and the hint under the amount. */
-export function ContributeForm({ vault, hint, onDone }: { vault: string; hint: string; onDone: () => void }) {
+export function ContributeForm({
+  vault,
+  university,
+  attestor,
+  hint,
+  onDone,
+}: {
+  vault: string;
+  university: string;
+  attestor: string;
+  hint: string;
+  onDone: () => void;
+}) {
   const wallet = useWallet();
   const tx = useSignAndSubmit();
   const [inputError, setInputError] = useState<string | null>(null);
@@ -24,6 +36,8 @@ export function ContributeForm({ vault, hint, onDone }: { vault: string; hint: s
     const done = await tx.run(() => api.contribute(vault, { funder: wallet.address!, amount: Number(amount) }), {
       action: "contribute",
       vault,
+      university,
+      attestor,
       amount,
     });
     if (done) onDone();

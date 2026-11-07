@@ -17,7 +17,7 @@ pub struct VaultParts {
     pub refunded_total: Usdc,
     pub contributor_count: u32,
     pub refunded_count: u32,
-    pub has_outside_contributions: bool,
+    pub closed_contributions: u32,
 }
 
 impl Vault {
@@ -38,7 +38,7 @@ impl Vault {
             refunded_total: p.refunded_total,
             contributor_count: p.contributor_count,
             refunded_count: p.refunded_count,
-            has_outside_contributions: p.has_outside_contributions,
+            closed_contributions: p.closed_contributions,
         })
     }
 }
@@ -53,13 +53,15 @@ fn is_consistent(p: &VaultParts) -> bool {
         && p.refunded_count <= p.contributor_count
         && p.refunded_total <= p.total_contributed
         && (p.contributor_count == 0) == p.total_contributed.is_zero()
-        && (p.contributor_count > 0 || !p.has_outside_contributions)
+        && p.total_contributed <= p.target
+        && p.closed_contributions <= p.contributor_count
         && none == p.refunded_total.is_zero()
         && all == (p.refunded_total == p.total_contributed);
     let status = match p.status {
-        VaultStatus::Open => none,
-        VaultStatus::Released => none && funded,
-        VaultStatus::Refunding => !all,
+        VaultStatus::Open => none && p.closed_contributions == 0,
+        VaultStatus::Released => none && funded && p.closed_contributions == 0,
+        // Only refunded contributions may close before the vault is Closed.
+        VaultStatus::Refunding => !all && p.closed_contributions <= p.refunded_count,
         // Refunding-derived: everyone refunded (or nobody funded). Released-derived: no refunds.
         VaultStatus::Closed => all || (none && funded),
     };
