@@ -1,9 +1,9 @@
 //! Shared handler state: the port implementations chosen at startup.
 
 use std::future::Future;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
-use arrhabon_app::ports::{AttestorSigner, Clock, SwapQuoter, VaultLedger};
+use arrhabon_app::ports::{AttestorSigner, Clock, SwapQuoter, TestFunds, VaultLedger};
 
 use crate::error::ApiError;
 
@@ -13,6 +13,7 @@ pub trait Ports: Send + Sync + 'static {
     type Quoter: SwapQuoter + 'static;
     type Clock: Clock + 'static;
     type Attestor: AttestorSigner + 'static;
+    type Faucet: TestFunds + 'static;
 
     /// Called before each crank tick; the live clock re-reads chain time here.
     fn refresh_clock(
@@ -31,6 +32,11 @@ pub struct Inner<P: Ports> {
     /// The DEMO attestor; `None` unless `DEMO_ATTESTOR=true`.
     pub attestor: Option<P::Attestor>,
     pub crank: bool,
+    /// DEMO faucet, `FAUCET=true` only; set once the chain is ready, like the ledger.
+    pub faucet_on: bool,
+    pub faucet: OnceLock<P::Faucet>,
+    /// Faucet cooldowns and the hourly grant budget.
+    pub faucet_claims: Mutex<crate::faucet::Claims>,
     /// `devnet` or `localnet`, reported by `/health`.
     pub cluster: &'static str,
 }

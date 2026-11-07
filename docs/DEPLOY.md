@@ -63,6 +63,18 @@ TOKEN_METADATA_URI=https://<vercel-url>/token.json scripts/token_metadata.sh dev
 
 This rewrites `web/public/token.json` with an absolute image URL (`https://<vercel-url>/token.png`); redeploy the web app so the file is served, since wallets fetch it from there. Rerunning updates the metadata if the URI changed and skips if it is current.
 
+## Test faucet (for judges)
+
+`FAUCET=true` turns on `POST /demo/faucet` and the **Get test funds** button in the web header. It tops the signed-in wallet up to 0.05 devnet SOL (fees) and 1,000 tUSD (contributions), sending only the shortfall, so a funded wallet gets nothing and a second click within 10 minutes is refused.
+
+Judges can claim test funds for any wallet address without logging in at https://arrhabon.vercel.app/faucet.
+
+1. Make a faucet keypair: `solana-keygen new --no-bip39-passphrase -o .keys/faucet.json`.
+2. Fund it once from the deployer: `scripts/fund_usdc.sh devnet $(solana-keygen pubkey .keys/faucet.json) 1000000 10` (1M tUSD and 10 SOL, enough for hundreds of judges).
+3. On Render, add `faucet.json` as a secret file, set `FAUCET=true` and `FAUCET_KEYPAIR=/etc/secrets/faucet.json`, save and wait for the redeploy. The log line "DEMO faucet ready" prints the faucet address.
+
+If the faucet runs dry, judges can still get devnet SOL at https://faucet.solana.com (cluster: devnet).
+
 ## 5. Smoke test
 
 - [ ] `curl https://<render-url>/health` returns `"cluster":"devnet"`, `"chain":"ready"`, `"crank":true`, `"demo_attestor":true`. Right after a deploy `chain` may read `not_initialised` for a few seconds; retry.

@@ -24,7 +24,7 @@ use crate::cluster::Network;
 use crate::error::applied_if;
 use crate::instructions::{self as ixs, VaultTerms};
 
-fn pk(a: AccountId) -> Pubkey {
+pub(crate) fn pk(a: AccountId) -> Pubkey {
     Pubkey::new_from_array(a.0)
 }
 

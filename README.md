@@ -25,6 +25,9 @@ The program also has `cancel` (the student withdraws a vault while it is open; e
 
 Three views in the web app: student (create a vault, share the link), funder (contribute, see your share and refund status), university (proof that funds are held and the release condition).
 
+Live demo: https://arrhabon.vercel.app
+Test faucet for judges: https://arrhabon.vercel.app/faucet
+
 ## How Solana enforces it
 
 - **Custody in a PDA.** USDC sits in a token account owned by the vault's program-derived address. No private key can move it; only the program's instructions can.

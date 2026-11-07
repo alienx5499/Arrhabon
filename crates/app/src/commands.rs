@@ -3,9 +3,11 @@
 //! The chain is authoritative; the domain pre-checks only fail early with a clear error.
 
 mod crank;
+mod faucet;
 mod funding;
 
 pub use crank::{Done, EXPIRY_GRACE_SECS, ExpireDue, Outcome, RefundKey, RunRefunds};
+pub use faucet::{ClaimTestFunds, Grant, LAMPORTS_GRANT, USDC_GRANT};
 pub use funding::QuoteCrossChainFunding;
 
 use arrhabon_domain::{AccountId, Contribution, Deadline, Usdc, Vault};

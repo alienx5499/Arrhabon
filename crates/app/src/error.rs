@@ -51,6 +51,9 @@ pub enum AppError {
     AttestorNotRegistered(AccountId),
     #[error("already applied")]
     AlreadyApplied,
+    /// The wallet already holds enough SOL and test USDC; the faucet sends nothing.
+    #[error("wallet already funded")]
+    AlreadyFunded,
     /// Refused without a program error code (e.g. by the swap service).
     #[error("rejected: {0}")]
     Rejected(String),

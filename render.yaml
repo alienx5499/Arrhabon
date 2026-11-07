@@ -38,6 +38,11 @@ services:
       # Secret file "attestor.json"; read only when DEMO_ATTESTOR=true.
       - key: DEMO_ATTESTOR_KEYPAIR
         value: /etc/secrets/attestor.json
+      # Devnet test faucet (POST /demo/faucet); secret file "faucet.json" holds its SOL and tUSD.
+      - key: FAUCET
+        value: "true"
+      - key: FAUCET_KEYPAIR
+        value: /etc/secrets/faucet.json
       # Optional: unset uses NEAR 1Click for dry quotes.
       - key: AURORA_API_KEY
         sync: false

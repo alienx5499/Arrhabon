@@ -21,7 +21,7 @@ use crate::dto;
 use crate::error::{ApiError, Body, Query};
 use crate::state::{AppState, Ports};
 
-type Res = Result<Json<Value>, ApiError>;
+pub type Res = Result<Json<Value>, ApiError>;
 
 /// Signed Solana transactions are at most 1,232 bytes; JSON bodies here stay far below this.
 pub const BODY_LIMIT: usize = 16 * 1024;
@@ -30,6 +30,8 @@ pub const BODY_LIMIT: usize = 16 * 1024;
 /// anyone, so in-flight submissions are capped and each is cut off after this.
 pub const SUBMIT_TIMEOUT: Duration = Duration::from_secs(75);
 const SUBMIT_CONCURRENCY: usize = 16;
+/// Faucet sends pay fees from one wallet; a few at a time is plenty for judges.
+const FAUCET_CONCURRENCY: usize = 4;
 
 /// Longest accepted origin chain, asset id or refund address.
 pub const MAX_FIELD_LEN: usize = 128;
@@ -58,6 +60,15 @@ pub fn router<P: Ports>(state: AppState<P>, web_origin: HeaderValue) -> Router {
             ),
         )
         .route("/demo/attest", post(demo_attest::<P>))
+        .route(
+            "/demo/faucet",
+            post(crate::faucet::demo_faucet::<P>).layer(
+                ServiceBuilder::new()
+                    .layer(HandleErrorLayer::new(submit_overloaded))
+                    .timeout(SUBMIT_TIMEOUT)
+                    .concurrency_limit(FAUCET_CONCURRENCY),
+            ),
+        )
         .route("/funding/quote", post(quote::<P>))
         .route("/funding/status", get(funding_status::<P>))
         .fallback(not_found)

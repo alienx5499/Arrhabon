@@ -55,6 +55,7 @@ impl From<AppError> for ApiError {
                 (S::BAD_REQUEST, "attestor_not_registered".into())
             }
             AppError::AlreadyApplied => (S::CONFLICT, "already_applied".into()),
+            AppError::AlreadyFunded => (S::CONFLICT, "already_funded".into()),
             AppError::Rejected(_) => (S::BAD_REQUEST, "rejected".into()),
             AppError::Unavailable(detail) => {
                 // The detail can name upstream hosts; it goes to logs (scrubbed), not clients.

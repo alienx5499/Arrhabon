@@ -5,6 +5,7 @@ mod config;
 mod crank;
 mod dto;
 mod error;
+mod faucet;
 mod routes;
 mod state;
 #[cfg(test)]
@@ -17,7 +18,8 @@ use std::time::Duration;
 use arrhabon_app::PortError;
 use arrhabon_aurora_adapter::{AuroraConfig, AuroraQuoter};
 use arrhabon_solana_adapter::{
-    ChainClock, Keypair, KeypairAttestor, Network, SolanaLedger, ensure_cluster, read_keypair_file,
+    Chain, ChainClock, Keypair, KeypairAttestor, Network, SolanaFaucet, SolanaLedger,
+    ensure_cluster, read_keypair_file,
 };
 use tokio::sync::watch;
 use tracing_subscriber::EnvFilter;
@@ -34,6 +36,7 @@ impl Ports for Live {
     type Quoter = AuroraQuoter;
     type Clock = ChainClock;
     type Attestor = KeypairAttestor;
+    type Faucet = SolanaFaucet;
 
     async fn refresh_clock(ledger: &SolanaLedger, clock: &ChainClock) {
         if let Err(e) = clock.sync(ledger.chain()).await {
@@ -82,6 +85,7 @@ async fn run() -> Result<(), String> {
 
     let crank_on = flag("CRANK", var("CRANK").as_deref(), true)?;
     let demo_on = flag("DEMO_ATTESTOR", var("DEMO_ATTESTOR").as_deref(), false)?;
+    let faucet_on = flag("FAUCET", var("FAUCET").as_deref(), false)?;
     let crank_every = crank_interval(var("CRANK_INTERVAL_SECS").as_deref())?;
     let origin = web_origin(&var("WEB_ORIGIN").unwrap_or_else(|| "http://localhost:3000".into()))?;
     // With the crank off nothing is ever paid, so a throwaway key serves the reads.
@@ -99,6 +103,13 @@ async fn run() -> Result<(), String> {
         }
         false => None,
     };
+    let faucet_key = match faucet_on {
+        true => {
+            tracing::warn!("DEMO faucet enabled: /demo/faucet sends devnet SOL and test USDC");
+            Some(keypair("FAUCET_KEYPAIR", ".keys/faucet.json")?)
+        }
+        false => None,
+    };
     let quoter = AuroraQuoter::new(AuroraConfig::from_env())
         .map_err(|e| format!("aurora client: {}", scrub(&e.to_string())))?;
     let state: AppState<Live> = AppState(Arc::new(Inner {
@@ -107,6 +118,9 @@ async fn run() -> Result<(), String> {
         clock: ChainClock::default(),
         attestor,
         crank: crank_on,
+        faucet_on,
+        faucet: OnceLock::new(),
+        faucet_claims: Default::default(),
         cluster: network.name(),
     }));
 
@@ -114,7 +128,7 @@ async fn run() -> Result<(), String> {
     let (fatal_tx, mut fatal) = watch::channel(None::<String>);
     let chain_state = state.clone();
     tokio::spawn(async move {
-        if let Err(e) = connect_chain(chain_state, network, rpc_url, crank_key).await {
+        if let Err(e) = connect_chain(chain_state, network, rpc_url, crank_key, faucet_key).await {
             fatal_tx.send_replace(Some(e));
         }
     });
@@ -176,6 +190,7 @@ async fn connect_chain(
     network: Network,
     rpc_url: String,
     crank: Keypair,
+    faucet_key: Option<Keypair>,
 ) -> Result<(), String> {
     loop {
         match ensure_cluster(network, &rpc_url).await {
@@ -188,6 +203,14 @@ async fn connect_chain(
                 match SolanaLedger::connect(network, &rpc_url, crank.insecure_clone()).await {
                     Ok(ledger) => {
                         Live::refresh_clock(&ledger, &state.clock).await;
+                        if let Some(key) = faucet_key.as_ref() {
+                            let chain = Chain::new(&rpc_url, Arc::new(crank.insecure_clone()))
+                                .map_err(|e| scrub(&e.to_string()))?;
+                            let faucet =
+                                SolanaFaucet::new(chain, key.insecure_clone(), ledger.mint());
+                            tracing::info!(address = %faucet.address(), "DEMO faucet ready");
+                            let _ = state.faucet.set(faucet);
+                        }
                         let _ = state.ledger.set(ledger);
                         tracing::info!(
                             cluster = network.name(),

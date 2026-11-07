@@ -46,6 +46,9 @@ export type Quote = {
   expires_at: number | string;
 };
 
+/** DEMO faucet grant: devnet SOL in lamports and test USDC in micro units (string, may exceed 2^53). */
+export type FaucetGrant = { demo: true; notice: string; signature: string; lamports: number; usdc_micro: string };
+
 export class ApiError extends Error {
   constructor(message: string, readonly code: string, readonly status: number) {
     super(message);
@@ -85,6 +88,7 @@ export const api = {
   contribute: (vault: string, b: { funder: string; amount: number }) =>
     call<UnsignedTx>(`/vaults/${seg(vault)}/contributions`, b),
   submit: (tx: string) => call<{ signature: string }>("/tx/submit", { tx }),
+  faucet: (wallet: string) => call<FaucetGrant>("/demo/faucet", { wallet }),
   demoAttest: (vault: string, outcome: "issued" | "denied") =>
     call<{ demo: true; notice: string; signature: string }>("/demo/attest", { vault, outcome }),
   quote: (b: {

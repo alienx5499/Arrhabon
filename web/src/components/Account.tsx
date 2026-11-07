@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useWallet } from "./wallet";
 import { AddressLink } from "./ui";
 import { ACCOUNT_SLOT_ID } from "./LoginBar";
+import { TestFunds } from "./TestFunds";
 
 const noSubscribe = () => () => {};
 
@@ -17,6 +18,7 @@ export function Account() {
     w.address ? (
       <>
         <AddressLink address={w.address} />
+        <TestFunds address={w.address} />
         <button className="btn-secondary" onClick={w.logout}>Log out</button>
       </>
     ) : (

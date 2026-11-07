@@ -186,6 +186,25 @@ pub trait SwapQuoter: Send + Sync {
     fn status(&self, deposit_address: &str) -> impl Future<Output = PortResult<SwapStatus>> + Send;
 }
 
+/// What a wallet holds of the two things a demo user needs: SOL for fees and test USDC.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WalletFunds {
+    pub lamports: u64,
+    pub usdc: Usdc,
+}
+
+/// DEMO ONLY: a devnet faucet wallet that tops up judges' wallets with SOL and test USDC.
+pub trait TestFunds: Send + Sync {
+    fn funds(&self, wallet: AccountId) -> impl Future<Output = PortResult<WalletFunds>> + Send;
+    /// One transaction from the faucet wallet; either amount may be zero, not both.
+    fn send(
+        &self,
+        wallet: AccountId,
+        lamports: u64,
+        usdc: Usdc,
+    ) -> impl Future<Output = PortResult<TxSignature>> + Send;
+}
+
 /// Unix seconds.
 pub trait Clock: Send + Sync {
     fn now(&self) -> i64;

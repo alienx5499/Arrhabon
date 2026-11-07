@@ -14,7 +14,7 @@ use arrhabon_domain::{AccountId, Usdc};
 use crate::PortError;
 use crate::ports::{
     AttestorSigner, Clock, PortResult, QuoteRequest, SignedTx, SwapQuote, SwapQuoter, SwapStatus,
-    UnsignedTx,
+    TestFunds, TxSignature, UnsignedTx, WalletFunds,
 };
 
 /// A settable clock; clones share the same time.
@@ -105,5 +105,45 @@ impl SwapQuoter for FakeQuoter {
             .get(deposit_address)
             .copied()
             .ok_or_else(|| PortError::rejected("unknown deposit address"))
+    }
+}
+
+/// A faucet over in-memory balances; `send` adds to the wallet and records the call.
+#[derive(Debug, Clone, Default)]
+pub struct FakeFaucet {
+    balances: Arc<Mutex<HashMap<AccountId, WalletFunds>>>,
+    sent: Arc<Mutex<Vec<(AccountId, u64, Usdc)>>>,
+}
+
+impl FakeFaucet {
+    pub fn set(&self, wallet: AccountId, lamports: u64, usdc: Usdc) {
+        let mut b = self.balances.lock().expect("fake faucet lock poisoned");
+        b.insert(wallet, WalletFunds { lamports, usdc });
+    }
+    pub fn sent(&self) -> Vec<(AccountId, u64, Usdc)> {
+        self.sent.lock().expect("fake faucet lock poisoned").clone()
+    }
+}
+
+impl TestFunds for FakeFaucet {
+    async fn funds(&self, wallet: AccountId) -> PortResult<WalletFunds> {
+        let b = self.balances.lock().expect("fake faucet lock poisoned");
+        Ok(b.get(&wallet).copied().unwrap_or(WalletFunds {
+            lamports: 0,
+            usdc: Usdc::new(0),
+        }))
+    }
+
+    async fn send(&self, wallet: AccountId, lamports: u64, usdc: Usdc) -> PortResult<TxSignature> {
+        let mut b = self.balances.lock().expect("fake faucet lock poisoned");
+        let e = b.entry(wallet).or_insert(WalletFunds {
+            lamports: 0,
+            usdc: Usdc::new(0),
+        });
+        e.lamports += lamports;
+        e.usdc = Usdc::new(e.usdc.micro() + usdc.micro());
+        let mut sent = self.sent.lock().expect("fake faucet lock poisoned");
+        sent.push((wallet, lamports, usdc));
+        Ok(TxSignature(format!("faucet-{}", sent.len())))
     }
 }

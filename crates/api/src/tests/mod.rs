@@ -1,6 +1,7 @@
 //! Route and crank tests on the app fakes.
 
 mod crank;
+mod faucet;
 mod funding;
 mod registry;
 mod routes;
@@ -8,7 +9,7 @@ mod routes;
 use std::sync::{Arc, OnceLock};
 
 use arrhabon_app::address::to_base58;
-use arrhabon_app::fakes::{FakeLedger, FakeQuoter, FakeSigner, FixedClock};
+use arrhabon_app::fakes::{FakeFaucet, FakeLedger, FakeQuoter, FakeSigner, FixedClock};
 use arrhabon_domain::{AccountId, Contribution, Deadline, Usdc, Vault};
 use axum::body::Body;
 use axum::http::{HeaderValue, Request, StatusCode};
@@ -26,6 +27,7 @@ impl Ports for TestPorts {
     type Quoter = FakeQuoter;
     type Clock = FixedClock;
     type Attestor = FakeSigner;
+    type Faucet = FakeFaucet;
 }
 
 pub const NOW: i64 = 1_000_000;
@@ -60,7 +62,21 @@ pub fn state(chain: bool, attestor: Option<AccountId>) -> AppState<TestPorts> {
         clock,
         attestor: attestor.map(FakeSigner),
         crank: false,
+        faucet_on: false,
+        faucet: OnceLock::new(),
+        faucet_claims: Default::default(),
         cluster: "devnet",
+    }))
+}
+
+/// A chain-ready state with the DEMO faucet on, backed by `faucet`.
+pub fn faucet_state(faucet: FakeFaucet) -> AppState<TestPorts> {
+    let s = state(true, None);
+    let inner = Arc::into_inner(s.0).expect("fresh state has one owner");
+    let _ = inner.faucet.set(faucet);
+    AppState(Arc::new(Inner {
+        faucet_on: true,
+        ..inner
     }))
 }
 

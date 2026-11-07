@@ -128,6 +128,16 @@ impl Chain {
         Ok(res.value.map(|a| a.data))
     }
 
+    /// Lamports held by any address; 0 if it does not exist.
+    pub async fn lamports(&self, key: &Pubkey) -> PortResult<u64> {
+        let res = self
+            .rpc
+            .get_account_with_commitment(key, CommitmentConfig::confirmed())
+            .await
+            .map_err(from_rpc)?;
+        Ok(res.value.map_or(0, |a| a.lamports))
+    }
+
     /// An account with data; lamports sent to an unused address alone do not count.
     pub async fn has_data(&self, key: &Pubkey) -> PortResult<bool> {
         Ok(self.account_data(key).await?.is_some_and(|d| !d.is_empty()))

@@ -18,6 +18,7 @@ export function Footer() {
             <Link href="/#how-it-works">How it works</Link>
             <Link href="/#where-it-can-go">Where it can go</Link>
             <Link href="/student">Open a vault</Link>
+            <Link href="/faucet">Test funds</Link>
             {SHOWCASE_VAULTS.map((v) => (
               <Link key={v.id} href={`/vault/${encodeURIComponent(v.id)}`}>{v.label} vault</Link>
             ))}

@@ -2,6 +2,7 @@
 
 mod commands;
 mod crank;
+mod faucet;
 mod funding;
 mod queries;
 
