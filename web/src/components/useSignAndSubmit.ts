@@ -18,7 +18,7 @@ export function useSignAndSubmit() {
   const [notice, setNotice] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
 
-  async function run<T extends UnsignedTx>(build: () => Promise<T>, intent: Intent, vaultOf?: (built: T) => string) {
+  async function run<T extends UnsignedTx>(build: () => Promise<T>, intent: Intent) {
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -28,8 +28,8 @@ export function useSignAndSubmit() {
       for (let attempt = 1; attempt <= MAX_BUILDS; attempt++) {
         const built = await build();
         const bytes = b64ToBytes(built.unsigned_tx);
-        checkTx(bytes, wallet.address, intent);
-        if (attempt === 1 && !window.confirm(describeIntent(intent, vaultOf?.(built)))) {
+        await checkTx(bytes, wallet.address, intent);
+        if (attempt === 1 && !window.confirm(describeIntent(intent))) {
           throw new Error("Cancelled: nothing was signed.");
         }
         const signed = await wallet.sign(bytes);

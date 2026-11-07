@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 export function useAsync<T>(load: (() => Promise<T>) | null) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
   // The request that last settled; loading is derived so the effect never sets state synchronously.
   const [settled, setSettled] = useState<{ load: typeof load; tick: number } | null>(null);
@@ -16,7 +17,7 @@ export function useAsync<T>(load: (() => Promise<T>) | null) {
     let ignore = false;
     load()
       .then(
-        (d) => !ignore && (setData(d), setError(null)),
+        (d) => !ignore && (setData(d), setError(null), setUpdatedAt(Date.now())),
         (e) => !ignore && setError(e),
       )
       .finally(() => !ignore && setSettled({ load, tick }));
@@ -25,5 +26,5 @@ export function useAsync<T>(load: (() => Promise<T>) | null) {
     };
   }, [load, tick]);
   const loading = load !== null && (settled?.load !== load || settled.tick !== tick);
-  return { data, error, loading, reload };
+  return { data, error, loading, reload, updatedAt };
 }

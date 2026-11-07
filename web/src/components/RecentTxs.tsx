@@ -1,17 +1,19 @@
 // Pure display of a vault's recent transactions (newest first) with devnet explorer links.
+import { formatDeadline } from "@/lib/countdown";
 import type { TxRow } from "@/lib/signatures";
-import { Card, ErrorText, TxLink } from "./ui";
+import { Card, Problem } from "./parts";
+import { TxLink } from "./ui";
 
-export function RecentTxs({ rows, error }: { rows: TxRow[] | null; error: unknown }) {
+export function RecentTxs({ rows, error, onRetry }: { rows: TxRow[] | null; error: unknown; onRetry?: () => void }) {
   return (
     <Card title="Recent transactions">
-      <ErrorText error={error} />
+      <Problem error={error} onRetry={onRetry} />
       {rows?.length === 0 && <p className="text-sm">No transactions yet.</p>}
       <ul className="listing text-sm">
         {rows?.map((r) => (
           <li key={r.signature} className="flex flex-wrap gap-3">
             <TxLink sig={r.signature} label={r.failed ? "Failed" : "Transaction"} />
-            {r.blockTime && <span className="muted">{new Date(r.blockTime * 1000).toLocaleString()}</span>}
+            {r.blockTime && <span className="muted">{formatDeadline(r.blockTime)}</span>}
           </li>
         ))}
       </ul>

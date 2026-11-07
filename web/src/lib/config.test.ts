@@ -1,0 +1,30 @@
+import { describe, expect, it } from "vitest";
+import { httpUrl, parseShowcase } from "./config";
+
+const ID = "6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE";
+
+describe("parseShowcase", () => {
+  it("is empty when unset", () => {
+    expect(parseShowcase(undefined)).toEqual([]);
+    expect(parseShowcase("  ")).toEqual([]);
+  });
+  it("reads labels and ids", () => {
+    expect(parseShowcase(JSON.stringify([{ label: " Released ", id: ID }]))).toEqual([{ label: "Released", id: ID }]);
+  });
+  it("rejects malformed input", () => {
+    expect(() => parseShowcase("{")).toThrow();
+    expect(() => parseShowcase('{"label":"x"}')).toThrow();
+    expect(() => parseShowcase(JSON.stringify([{ label: "x", id: "../student" }]))).toThrow();
+    expect(() => parseShowcase(JSON.stringify([{ label: "", id: ID }]))).toThrow();
+  });
+});
+
+describe("httpUrl", () => {
+  it("allows unset and http(s)", () => {
+    expect(httpUrl(undefined, "X")).toBe("");
+    expect(httpUrl(" https://example.com ", "X")).toBe("https://example.com");
+  });
+  it("rejects other schemes", () => {
+    expect(() => httpUrl("javascript:alert(1)", "X")).toThrow();
+  });
+});

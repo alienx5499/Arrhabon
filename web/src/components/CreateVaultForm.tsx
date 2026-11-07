@@ -1,18 +1,20 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { ATTESTORS, UNIVERSITIES, nameParties, type Party } from "@/lib/config";
 import { parseUsdc } from "@/lib/usdc";
+import { vaultAddress } from "@/lib/txCheck";
 import { useWallet } from "./wallet";
 import { useSignAndSubmit } from "./useSignAndSubmit";
-import { Card, ErrorText, Field, TxStatus } from "./ui";
+import { Card, Problem } from "./parts";
+import { Field, TxStatus } from "./ui";
 
 function PartySelect({ label, name, parties }: { label: string; name: string; parties: Party[] }) {
   return (
     <Field label={label}>
       {parties.length ? (
-        <select name={name} required className="input">
+        <select name={name} required className="input w-full max-w-full">
           {parties.map((p) => (
             <option key={p.address} value={p.address}>
               {p.name}
@@ -20,7 +22,7 @@ function PartySelect({ label, name, parties }: { label: string; name: string; pa
           ))}
         </select>
       ) : (
-        <input name={name} required className="input font-mono" placeholder="Registered base58 address" />
+        <input name={name} required className="input w-full max-w-full font-mono" placeholder="Registered Solana address" />
       )}
     </Field>
   );
@@ -32,6 +34,7 @@ export function CreateVaultForm({ onCreated }: { onCreated: () => void }) {
   const [vault, setVault] = useState<string | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
   const [parties, setParties] = useState({ universities: UNIVERSITIES, attestors: ATTESTORS });
+  const why = useId();
 
   useEffect(() => {
     api
@@ -51,8 +54,10 @@ export function CreateVaultForm({ onCreated }: { onCreated: () => void }) {
     const target = parseUsdc(String(f.get("target")));
     const deadline = Math.floor(new Date(String(f.get("deadline"))).getTime() / 1000);
     if (target === null || !Number.isFinite(deadline)) return setInputError("Enter a USDC amount and a deadline.");
+    if (!wallet.address) return setInputError("Log in to create a vault.");
     setInputError(null);
     const nonce = Date.now();
+    const expected = await vaultAddress(wallet.address, BigInt(nonce));
     const university = String(f.get("university"));
     const attestor = String(f.get("attestor"));
     const done = await tx.run(
@@ -65,33 +70,33 @@ export function CreateVaultForm({ onCreated }: { onCreated: () => void }) {
           deadline,
           nonce,
         }),
-      { action: "create_vault", target, university, attestor },
-      (built) => built.vault,
+      { action: "create_vault", nonce: BigInt(nonce), vault: expected, university, attestor, target, deadline: BigInt(deadline) },
     );
     if (done) {
-      setVault(done.built.vault);
+      setVault(expected);
       onCreated();
     }
   }
 
   const share = vault ? `${location.origin}/vault/${vault}` : "";
+  const disabledWhy = !wallet.address ? "Log in to create a vault." : tx.busy ? "Approve the transaction in your wallet to continue." : null;
   return (
     <Card title="Create a vault">
-      <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <PartySelect label="University" name="university" parties={parties.universities} />
-        <PartySelect label="Visa attestor" name="attestor" parties={parties.attestors} />
+        <PartySelect label="Visa attestor (confirms the visa decision)" name="attestor" parties={parties.attestors} />
         <Field label="Target (USDC)">
-          <input name="target" required inputMode="decimal" className="input" placeholder="1000" />
+          <input name="target" required inputMode="decimal" className="input w-full max-w-full" placeholder="1000" />
         </Field>
-        <Field label="Deadline for the visa decision">
-          <input name="deadline" required type="datetime-local" className="input" />
+        <Field label="Deadline for the visa decision (your local time)">
+          <input name="deadline" required type="datetime-local" className="input w-full max-w-full" />
         </Field>
-        <div className="flex flex-col gap-2 sm:col-span-2">
-          <button className="btn self-start" disabled={!wallet.address || tx.busy}>
+        <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
+          <button className="btn self-start" disabled={disabledWhy !== null} aria-describedby={disabledWhy ? why : undefined}>
             {tx.busy ? "Waiting for signature…" : "Create vault"}
           </button>
-          {!wallet.address && <p className="text-sm">Log in to create a vault.</p>}
-          <ErrorText error={inputError ?? tx.error} />
+          {disabledWhy && <p id={why} className="text-sm">{disabledWhy}</p>}
+          <Problem error={inputError ?? tx.error} />
           <TxStatus notice={tx.notice} sig={tx.signature} />
           {vault && (
             <p className="text-sm">

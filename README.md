@@ -183,6 +183,7 @@ Web (`web/`):
 | `NEXT_PUBLIC_PROGRAM_ID` | the deployed program | Arrhabon program id, used to check transactions before signing. |
 | `NEXT_PUBLIC_UNIVERSITIES` | empty | Display names, `Name=address,Name2=address2`. Also the picker fallback when `/registry` is unreachable. |
 | `NEXT_PUBLIC_ATTESTORS` | empty | Same format, for attestors. |
+| `NEXT_PUBLIC_REGISTRY_NAMES` | empty | JSON map of address to display name, e.g. `{"<address>":"Uni A"}`. Checked first; unnamed addresses show shortened. |
 
 ## Testing
 

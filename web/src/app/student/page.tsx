@@ -2,10 +2,14 @@
 import Link from "next/link";
 import { useCallback } from "react";
 import { api } from "@/lib/api";
+import { displayName } from "@/lib/config";
+import { formatDeadline } from "@/lib/countdown";
+import { OUTCOME_TEXT, outcomeOf } from "@/lib/outcome";
 import { useWallet } from "@/components/wallet";
 import { useAsync } from "@/components/useAsync";
 import { CreateVaultForm } from "@/components/CreateVaultForm";
-import { Card, ErrorText, Loading, StatusBadge, Usdc } from "@/components/ui";
+import { Card, Problem } from "@/components/parts";
+import { Loading, StatusBadge, Usdc } from "@/components/ui";
 
 export default function StudentPage() {
   const { address } = useWallet();
@@ -18,16 +22,17 @@ export default function StudentPage() {
       <CreateVaultForm onCreated={vaults.reload} />
       <Card title="Your vaults">
         {!address && <p className="text-sm">Log in to see your vaults.</p>}
-        <Loading show={vaults.loading} />
-        <ErrorText error={vaults.error} />
+        <Loading show={vaults.loading && !vaults.data} />
+        <Problem error={vaults.error} onRetry={vaults.reload} />
         {vaults.data?.length === 0 && <p className="text-sm">No vaults yet.</p>}
         <ul className="listing">
           {vaults.data?.map((v) => (
             <li key={v.vault} className="flex flex-wrap items-baseline gap-3">
               <StatusBadge status={v.status} />
-              <Link className="link font-mono text-sm break-all" href={`/vault/${v.vault}`}>{v.vault}</Link>
+              <Link className="link break-words text-sm" href={`/vault/${v.vault}`}>Deposit for {displayName(v.university)}</Link>
               <span className="text-sm">
-                <Usdc micro={v.total_contributed} /> of <Usdc micro={v.target} />
+                {OUTCOME_TEXT[outcomeOf(v.status, v.contributors)].title}. <Usdc micro={v.total_contributed} /> of{" "}
+                <Usdc micro={v.target} />, deadline {formatDeadline(v.deadline)}
               </span>
             </li>
           ))}

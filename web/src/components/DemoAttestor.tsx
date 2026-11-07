@@ -1,13 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { api } from "@/lib/api";
-import { ErrorText, TxStatus } from "./ui";
+import { Problem } from "./parts";
+import { TxStatus } from "./ui";
 
 /** Rendered only when the API reports the demo attestor enabled. */
 export function DemoAttestor({ vault, onDone }: { vault: string; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [sig, setSig] = useState<string | null>(null);
+  const heading = useId();
+  const why = useId();
 
   async function attest(outcome: "issued" | "denied") {
     setBusy(true);
@@ -23,17 +26,18 @@ export function DemoAttestor({ vault, onDone }: { vault: string; onDone: () => v
   }
 
   return (
-    <section aria-label="DEMO attestor" className="demo-box">
-      <h2 className="section-head mb-1">
-        <span className="label demo-tag mr-2 align-middle">DEMO</span>
-        Mock visa attestor
+    <section aria-labelledby={heading} className="demo-box">
+      <h2 id={heading} className="section-head mb-1">
+        <span className="label demo-tag mr-2 align-middle">Demo</span>
+        Pretend visa decision
       </h2>
-      <p className="mb-3 text-sm">Signs with a demo-only key. Not a real visa decision.</p>
+      <p className="mb-3 text-sm">For this demo only: decide the visa with a test key. A real vault waits for the real attestor.</p>
       <div className="flex flex-wrap gap-3">
-        <button className="btn" disabled={busy} onClick={() => attest("issued")}>DEMO: visa issued</button>
-        <button className="btn-secondary" disabled={busy} onClick={() => attest("denied")}>DEMO: visa denied</button>
+        <button className="btn" disabled={busy} aria-describedby={busy ? why : undefined} onClick={() => attest("issued")}>Demo: visa issued</button>
+        <button className="btn-secondary" disabled={busy} aria-describedby={busy ? why : undefined} onClick={() => attest("denied")}>Demo: visa denied</button>
       </div>
-      <ErrorText error={error} />
+      {busy && <p id={why} className="mt-2 text-sm">Sending the decision…</p>}
+      <Problem error={error} />
       <div className="mt-2"><TxStatus notice={null} sig={sig} /></div>
     </section>
   );

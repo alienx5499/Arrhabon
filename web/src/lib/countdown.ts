@@ -8,3 +8,16 @@ export function formatCountdown(secondsLeft: number): string {
     .join(":");
   return days > 0 ? `${days}d ${hms}` : hms;
 }
+
+/** Unix seconds as the viewer's local date and time with the time zone, e.g. "4 Nov 2026, 18:30 GMT+5:30". */
+export function formatDeadline(unix: number, locale?: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+    timeZone,
+  }).format(new Date(unix * 1000));
+}
