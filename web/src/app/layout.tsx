@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Epilogue, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { LoginBar } from "@/components/LoginBar";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Arrhabon", description },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${epilogue.variable} ${mono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">

@@ -1,0 +1,12 @@
+{
+  "cluster": "devnet",
+  "program_id": "3ipoFfDp56kURD4cYvjhynFz1GfNj94gcyWk7BddTEfd",
+  "usdc_mint": "7Lbs5a3RVTkAYPTkWHgLzBgNH3fCW2T4d8GmNCPapL5J",
+  "config": "2YBGQ4zH74Ty4gapWHwRWsRSxwy3MqM9x9WdoZER4Ncu",
+  "admin": "HwrjaPLqsq3YuR6cuK93oNtpGSsXoUtQ4oY9GwuYf2Vy",
+  "university": "AhTYHEzfvSozBthXXmBxM6kbFULXvhBt68wu4oAkfivP",
+  "attestor": "DazDbJ5jwVtHDJX1DDsHMRPcGNZPsWUqdDERoevLzL73",
+  "crank": "8Mazm9BRZQtPmSp3VwzwJpHUaNwCQKEgeG1syxVAKiR2",
+  "student": "GHUYUP2zEQGArq8QJPT7if6d2DjqHjuqV6FDzoYYi2zL",
+  "funders": ["6t9F53oYo7G6LwsLTHXxeMNfG6xJLWuKRGdvLpAXMtK8", "AeCejU1u4NNCL2hF6TUBYEwB42UN4MRcx7LJyrSZL5uz"]
+}
