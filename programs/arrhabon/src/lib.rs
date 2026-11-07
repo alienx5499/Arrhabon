@@ -10,7 +10,7 @@ pub mod state;
 
 pub use instructions::*;
 
-declare_id!("6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE");
+declare_id!("3ipoFfDp56kURD4cYvjhynFz1GfNj94gcyWk7BddTEfd");
 
 #[program]
 pub mod arrhabon {

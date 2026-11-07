@@ -4,7 +4,7 @@ export type Party = { name: string; address: string };
 export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID?.trim() ?? "";
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8080").replace(/\/$/, "");
 export const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL?.trim() || "https://api.devnet.solana.com";
-export const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID?.trim() || "6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE";
+export const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID?.trim() || "3ipoFfDp56kURD4cYvjhynFz1GfNj94gcyWk7BddTEfd";
 
 /** Parses "Name=address,Name2=address2"; entries without "=" use the address as the name. */
 export function parseParties(raw: string | undefined): Party[] {

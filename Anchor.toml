@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-arrhabon = "6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE"
+arrhabon = "3ipoFfDp56kURD4cYvjhynFz1GfNj94gcyWk7BddTEfd"
 
 [programs.localnet]
-arrhabon = "6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE"
+arrhabon = "3ipoFfDp56kURD4cYvjhynFz1GfNj94gcyWk7BddTEfd"
 
 [provider]
 cluster = "devnet"

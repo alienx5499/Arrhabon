@@ -7,7 +7,7 @@ import { classifyProblem } from "./problem";
 import { percentToBps } from "./quote";
 import { withinMs } from "./withinMs";
 
-const LONG = "6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE";
+const LONG = "3ipoFfDp56kURD4cYvjhynFz1GfNj94gcyWk7BddTEfd";
 const c = (amount: number, refunded = false) => ({ funder: `f${amount}`, amount, refunded });
 const vault = (status: Vault["status"], contributors: Vault["contributors"]): Vault => ({
   vault: "v",
@@ -136,7 +136,7 @@ describe("names", () => {
     const parties = [{ name: "From list", address: "Abc" }];
     expect(displayName("Abc", { Abc: "From map" }, parties)).toBe("From map");
     expect(displayName("Abc", {}, parties)).toBe("From list");
-    expect(displayName(LONG, {}, [])).toBe("6p3Y…j8JE");
+    expect(displayName(LONG, {}, [])).toBe("3ipo…TEfd");
     expect(nameParties([LONG], [], { [LONG]: "Uni B" })).toEqual([{ name: "Uni B", address: LONG }]);
   });
 });
