@@ -46,6 +46,9 @@ export type Quote = {
   expires_at: number | string;
 };
 
+export type SwapStatus = "pending" | "success" | "refunded" | "failed";
+export type FundingStatus = { deposit_address: string; status: SwapStatus };
+
 /** DEMO faucet grant: devnet SOL in lamports and test USDC in micro units (string, may exceed 2^53). */
 export type FaucetGrant = { demo: true; notice: string; signature: string; lamports: number; usdc_micro: string };
 
@@ -100,6 +103,7 @@ export const api = {
     refund_to: string;
     slippage_bps: number;
   }) => call<Quote>("/funding/quote", b),
+  fundingStatus: (depositAddress: string) => call<FundingStatus>(`/funding/status?deposit_address=${seg(depositAddress)}`),
 };
 
 export const b64ToBytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));

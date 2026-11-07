@@ -7,11 +7,13 @@ import { parseUsdc } from "@/lib/usdc";
 import { useWallet } from "./wallet";
 import { Card, Problem } from "./parts";
 import { Field, Usdc } from "./ui";
+import { LiveDeposit } from "./LiveDeposit";
 
-/** Aurora cross-chain price check: dry quotes only, nothing is sent. */
+/** Aurora cross-chain price check: dry quotes or live deposits. */
 export function QuotePanel({ vault }: { vault: string }) {
   const wallet = useWallet();
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [origin, setOrigin] = useState<{ chain: string; asset: string; amount: string } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
 
@@ -22,22 +24,26 @@ export function QuotePanel({ vault }: { vault: string }) {
     if (amount === null) return setError(new Error("Enter a USDC amount with at most 6 decimals."));
     const slippage = percentToBps(String(f.get("slippage")));
     if (slippage === null) return setError(new Error("Enter a price tolerance between 0 and 100 percent."));
+    const chainId = String(f.get("chain"));
+    const chainName = CHAINS.find((c) => c.id === chainId)?.name ?? chainId;
+    const amountStr = String(f.get("amount"));
     setBusy(true);
     setError(null);
     try {
-      setQuote(
-        await api.quote({
-          vault,
-          origin_chain: String(f.get("chain")),
-          origin_asset: "USDC",
-          origin_amount: amount.toString(),
-          funder: String(f.get("funder")),
-          refund_to: String(f.get("refund_to")),
-          slippage_bps: slippage,
-        }),
-      );
+      const q = await api.quote({
+        vault,
+        origin_chain: chainId,
+        origin_asset: "USDC",
+        origin_amount: amount.toString(),
+        funder: String(f.get("funder")),
+        refund_to: String(f.get("refund_to")),
+        slippage_bps: slippage,
+      });
+      setOrigin({ chain: chainName, asset: "USDC", amount: amountStr });
+      setQuote(q);
     } catch (err) {
       setQuote(null);
+      setOrigin(null);
       setError(err);
     } finally {
       setBusy(false);
@@ -78,13 +84,16 @@ export function QuotePanel({ vault }: { vault: string }) {
         </div>
       </form>
       <Problem error={error} />
-      {quote && (
+      {quote && quote.dry && (
         <dl className="listing mt-4 text-sm" aria-live="polite">
           <div className="listing-row"><dt>At least this arrives</dt><dd><Usdc micro={quote.min_usdc_out} /></dd></div>
           <div className="listing-row"><dt>Fee</dt><dd><Usdc micro={quote.fee} /></dd></div>
           <div className="listing-row"><dt>Price valid until</dt><dd>{typeof quote.expires_at === "number" ? formatDeadline(quote.expires_at) : quote.expires_at}</dd></div>
-          {quote.dry && <div className="listing-row"><dt>Note</dt><dd>Price only: no deposit address was created.</dd></div>}
+          <div className="listing-row"><dt>Note</dt><dd>Price only: no deposit address was created.</dd></div>
         </dl>
+      )}
+      {quote && !quote.dry && origin && (
+        <LiveDeposit quote={quote} chain={origin.chain} asset={origin.asset} amount={origin.amount} />
       )}
     </Card>
   );
