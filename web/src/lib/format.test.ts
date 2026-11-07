@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatUsdc, parseUsdc } from "./usdc";
-import { formatCountdown } from "./countdown";
+import { formatShortDeadline, formatTimeLeft } from "./countdown";
 import { nameParties, parseParties } from "./config";
 import { b64ToBytes, bytesToB64 } from "./api";
 
@@ -25,10 +25,22 @@ describe("usdc", () => {
 
 describe("countdown", () => {
   it("formats remaining time", () => {
-    expect(formatCountdown(0)).toBe("deadline passed");
-    expect(formatCountdown(-5)).toBe("deadline passed");
-    expect(formatCountdown(65)).toBe("00:01:05");
-    expect(formatCountdown(2 * 86400 + 3 * 3600 + 4 * 60 + 5)).toBe("2d 03:04:05");
+    expect(formatTimeLeft(0)).toBe("deadline passed");
+    expect(formatTimeLeft(-5)).toBe("deadline passed");
+    expect(formatTimeLeft(30)).toBe("under a minute");
+    expect(formatTimeLeft(65)).toBe("1 minute");
+    expect(formatTimeLeft(8 * 60 + 59)).toBe("8 minutes");
+    expect(formatTimeLeft(3600 + 120)).toBe("1 hour 2 minutes");
+    expect(formatTimeLeft(4 * 86400 + 6 * 3600 + 4 * 60)).toBe("4 days 6 hours");
+    expect(formatTimeLeft(86400 + 59)).toBe("1 day");
+  });
+  it("writes a compact deadline with the zone's short name", () => {
+    const t = Date.UTC(2026, 10, 12, 12, 30) / 1000;
+    expect(formatShortDeadline(t, "Asia/Kolkata")).toBe("12 Nov, 18:00 IST");
+    expect(formatShortDeadline(t, "UTC")).toBe("12 Nov, 12:30 UTC");
+    expect(formatShortDeadline(t, "Europe/London")).toBe("12 Nov, 12:30 GMT");
+    // No English locale names Kathmandu's zone, so the offset stands in.
+    expect(formatShortDeadline(t, "Asia/Kathmandu")).toBe("12 Nov, 18:15 GMT+5:45");
   });
 });
 

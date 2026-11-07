@@ -9,7 +9,7 @@ export function classifyProblem(e: unknown): Problem {
     const detail = `${e.status || "no response"} ${e.code}: ${raw}`;
     // 502-504: the free host's proxy answers while the service starts.
     if (e.code === "network" || [502, 503, 504].includes(e.status)) {
-      return { message: "The vault service is waking up (free hosting sleeps).", detail, retry: true };
+      return { message: "The vault service is starting up. This can take up to a minute.", detail, retry: true };
     }
     if (e.status === 404) return { message: "Not found. Check that the link is complete.", detail, retry: false };
     return { message: "The vault service could not do that. Open Details for the reason.", detail, retry: false };

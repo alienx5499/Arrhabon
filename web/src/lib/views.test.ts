@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ApiError, type Vault } from "./api";
 import { displayName, nameParties, parseNameMap } from "./config";
 import { formatDeadline } from "./countdown";
-import { OUTCOME_TEXT, funderTag, outcomeOf, universityTotals } from "./outcome";
+import { OUTCOME_TEXT, TAG_OF, exitRules, funderTag, outcomeOf, shareOf, tagLabel, universityTotals, vaultFacts } from "./outcome";
 import { classifyProblem } from "./problem";
 import { percentToBps } from "./quote";
 import { withinMs } from "./withinMs";
@@ -51,13 +51,66 @@ describe("outcome", () => {
     ]);
     expect(t).toEqual({ held: 17n, released: 150n, refunded: 8n, count: 6 });
   });
+  it("tags a vault by how it ended", () => {
+    const tag = (v: Vault) => TAG_OF[outcomeOf(v.status, v.contributors)];
+    expect(tag(vault("open", []))).toBe("open");
+    expect(tag(vault("released", [c(100)]))).toBe("released");
+    expect(tag(vault("closed", [c(100)]))).toBe("released");
+    expect(tag(vault("refunding", [c(5)]))).toBe("refunding");
+    expect(tag(vault("closed", [c(5, true)]))).toBe("refunded");
+    expect(tag(vault("closed", []))).toBe("closed");
+    expect(tagLabel("refunding")).toBe("Refunding");
+    expect(tagLabel("refunded")).toBe("Refunded");
+  });
+  it("gives each funder a whole-percent share", () => {
+    expect(shareOf(400, 600)).toBe("67%");
+    expect(shareOf(50, 600)).toBe("8%");
+    expect(shareOf(1, 1000)).toBe("<1%");
+    expect(shareOf(0, 0)).toBe("0%");
+  });
+  it("shows time left only while open, and when a closed vault closed", () => {
+    const fmt = (t: number) => `t${t}`;
+    const labels = (v: Vault, closedAt?: number | null) => vaultFacts(v, outcomeOf(v.status, v.contributors), closedAt, fmt).map((f) => f.label);
+    expect(labels(vault("open", [c(1)]))).toEqual(["Time left", "Deadline", "Funders"]);
+    expect(labels(vault("refunding", [c(1)]))).toEqual(["Deadline", "Funders"]);
+    expect(labels(vault("closed", [c(1)]), null)).toEqual(["Closed on", "Deadline", "Funders"]);
+    expect(vaultFacts(vault("closed", [c(1)]), "paid", null, fmt)[0]).toEqual({ label: "Closed on", text: "Not known" });
+    expect(vaultFacts(vault("closed", [c(1)]), "paid", 7, fmt)[0]).toEqual({ label: "Closed on", text: "t7" });
+    expect(vaultFacts(vault("closed", [c(1)]), "paid", undefined, fmt)[0]).toEqual({ label: "Closed on", text: null });
+  });
+  const usdc = (m: number) => String(m);
+  const rulesOf = (v: Vault) => exitRules(v, outcomeOf(v.status, v.contributors), "Uni", usdc);
+  it("writes the exits with the vault's numbers", () => {
+    expect(rulesOf(vault("open", [c(100), c(20)])).map((r) => r.text)).toEqual([
+      "120 USDC goes to Uni in one payment.",
+      "Each of the 2 funders below gets back their own amount, 120 USDC in all.",
+    ]);
+    expect(rulesOf(vault("open", [c(30)])).map((r) => r.text)).toEqual([
+      "Once 100 USDC is raised, the whole deposit goes to Uni in one payment.",
+      "The funder below gets back their own amount, 30 USDC in all.",
+    ]);
+    expect(rulesOf(vault("open", []))[1].text).toBe("Anyone who pays in gets back their own amount.");
+  });
+  it("shows both exits while open and only the one taken once finished", () => {
+    const keys = (v: Vault) => rulesOf(v).map((r) => r.key);
+    expect(keys(vault("open", [c(1)]))).toEqual(["issued", "refused"]);
+    expect(keys(vault("released", [c(100)]))).toEqual(["issued"]);
+    expect(keys(vault("closed", [c(100)]))).toEqual(["issued"]);
+    expect(keys(vault("refunding", [c(5)]))).toEqual(["refused"]);
+    expect(keys(vault("closed", [c(5, true)]))).toEqual(["refused"]);
+    expect(keys(vault("closed", []))).toEqual([]);
+    expect(rulesOf(vault("closed", [c(100)]))[0].text).toBe("The visa was issued. The whole deposit went to Uni.");
+    expect(rulesOf(vault("closed", [c(60, true), c(40, true)]))[0].text).toBe(
+      "The visa was refused or the deadline passed. Each of the 2 funders got back their own amount, 100 USDC in all.",
+    );
+  });
 });
 
 describe("problem", () => {
-  it("treats an unreachable or starting API as waking up, with the raw text as detail", () => {
+  it("treats an unreachable or starting API as starting up, with the raw text as detail", () => {
     const p = classifyProblem(new ApiError("API unreachable at http://x", "network", 0));
     expect(p.retry).toBe(true);
-    expect(p.message).toContain("waking up");
+    expect(p.message).toBe("The vault service is starting up. This can take up to a minute.");
     expect(p.detail).toContain("API unreachable");
     expect(classifyProblem(new ApiError("bad gateway", "http", 502)).retry).toBe(true);
   });

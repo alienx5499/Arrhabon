@@ -19,3 +19,30 @@
   content: ""; position: absolute; left: -18%; right: -18%; bottom: -3px; height: 3px;
   background: var(--color-ink, #151d30);
 }
+.art-slot-scene { display: flex; align-items: flex-end; justify-content: center; gap: 6%; width: 100%; }
+/* Hero: a stone gateway outline beside the jar. */
+.art-slot-gate {
+  position: relative; width: min(20%, 150px); aspect-ratio: 2 / 3;
+  border: 3px solid var(--color-ink, #151d30); border-bottom: 0; border-radius: 999px 999px 0 0; opacity: 0.5;
+}
+.art-slot-gate::before {
+  content: ""; position: absolute; inset: 16% 16% 0;
+  border: 2px solid var(--color-ink, #151d30); border-bottom: 0; border-radius: 999px 999px 0 0;
+}
+/* How it works: five step dots on one line, an arrow into each; the fourth is the payout. */
+.art-slot-steps {
+  position: relative; display: flex; align-items: center; justify-content: space-between; width: min(72%, 720px);
+}
+.art-slot-steps::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px;
+  background: var(--color-ink, #151d30); opacity: 0.5;
+}
+.art-slot-step {
+  position: relative; width: clamp(14px, 3vw, 32px); aspect-ratio: 1; border-radius: 50%;
+  border: 3px solid var(--color-ink, #151d30); background: var(--color-surface, #ece8dd);
+}
+.art-slot-step:nth-child(4) { background: var(--color-accent, #e0a526); }
+.art-slot-step + .art-slot-step::before {
+  content: ""; position: absolute; top: 50%; right: calc(100% + 6px); transform: translateY(-50%);
+  border-left: 10px solid var(--color-ink, #151d30); border-block: 7px solid transparent;
+}

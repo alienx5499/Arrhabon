@@ -224,11 +224,6 @@ body {
     font: var(--weight-display) 1.5rem/1 var(--font-display);
     letter-spacing: var(--tracking-display);
   }
-  .footer h2 {
-    font: 600 var(--text-small) / 1.4 var(--font-text);
-    letter-spacing: 0;
-    margin-bottom: var(--space-2);
-  }
   .directory {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -510,7 +505,9 @@ body {
     background: var(--status-released-bg);
     color: var(--status-released-fg);
   }
-  .tag-refunding {
+  /* Refunding and Refunded share the navy: the money is going, then gone, home. */
+  .tag-refunding,
+  .tag-refunded {
     background: var(--status-refunding-bg);
     color: var(--status-refunding-fg);
   }
@@ -560,6 +557,146 @@ body {
   progress::-moz-progress-bar {
     background: var(--color-accent);
     border-radius: var(--radius-tag);
+  }
+  /* Refunding and Refunded: navy, going home. Closed empty: muted. Released keeps the gold, filled. */
+  progress:is(.bar-refunding, .bar-refunded)::-webkit-progress-value {
+    background: var(--color-field);
+  }
+  progress:is(.bar-refunding, .bar-refunded)::-moz-progress-bar {
+    background: var(--color-field);
+  }
+  progress.bar-closed::-webkit-progress-value {
+    background: var(--color-placeholder);
+  }
+  progress.bar-closed::-moz-progress-bar {
+    background: var(--color-placeholder);
+  }
+
+  /* Vault page: figure, bar and facts beside the pay panel; on phones the panel follows the facts. */
+  .vault-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "summary" "panel" "rest";
+    gap: var(--space-6);
+    margin-top: var(--space-7);
+  }
+  .vault-summary {
+    grid-area: summary;
+  }
+  .vault-panel {
+    grid-area: panel;
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    padding: var(--space-6);
+    min-width: 0;
+  }
+  .vault-rest {
+    grid-area: rest;
+    min-width: 0;
+  }
+  @media (min-width: 900px) {
+    .vault-grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+      grid-template-areas: "summary panel" "rest panel";
+      grid-template-rows: auto 1fr;
+      gap: var(--space-5) var(--space-7);
+      align-items: start;
+    }
+  }
+  .vault-panel h2,
+  .funders h2 {
+    font-size: var(--text-h2);
+    margin-bottom: var(--space-4);
+  }
+  .vault-panel .note {
+    margin-top: var(--space-4);
+    font-size: var(--text-small);
+    color: var(--color-mid);
+  }
+  .raised {
+    font: var(--weight-display) var(--text-h1) / 1 var(--font-display);
+    letter-spacing: var(--tracking-display);
+    font-variant-numeric: tabular-nums;
+  }
+  .raised small {
+    display: block;
+    margin-top: var(--space-3);
+    font: 400 var(--text-lead) / 1.3 var(--font-text);
+    letter-spacing: 0;
+    color: var(--color-mid);
+  }
+  .vault .bar {
+    margin-top: var(--space-5);
+    background: var(--color-surface);
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+  @media (min-width: 700px) {
+    .facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .facts dt {
+    font-size: var(--text-small);
+    color: var(--color-mid);
+  }
+  .facts dd {
+    margin-top: var(--space-1);
+    font-size: var(--text-h3);
+    font-weight: 600;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .rules {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  @media (min-width: 700px) {
+    .rules:not(.rules-one) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .rules .section-head {
+    margin-bottom: var(--space-2);
+  }
+  .funders {
+    margin-top: var(--space-7);
+  }
+  .funders :is(th, td) + :is(th, td) {
+    padding-left: var(--space-4);
+  }
+  .funders :is(th, td).r {
+    text-align: right;
+  }
+  .funders td .tag {
+    white-space: normal;
+  }
+  .funders .row-tag {
+    margin-top: var(--space-2);
+  }
+  @media (max-width: 699px) {
+    .hide-sm {
+      display: none;
+    }
+  }
+  @media (min-width: 700px) {
+    .funders .row-tag {
+      display: none;
+    }
+  }
+  .vault-details {
+    margin-top: var(--space-8);
+  }
+  .vault-details summary,
+  .quote-toggle summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding-block: var(--space-2);
   }
 
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {

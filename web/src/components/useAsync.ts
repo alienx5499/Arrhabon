@@ -3,8 +3,9 @@
 // request (changed input, reload, unmount) are ignored so a slow old reply never overwrites a newer one.
 import { useCallback, useEffect, useState } from "react";
 
-export function useAsync<T>(load: (() => Promise<T>) | null) {
-  const [data, setData] = useState<T | null>(null);
+/** `initial` is server-fetched data shown until the first client load settles. */
+export function useAsync<T>(load: (() => Promise<T>) | null, initial: T | null = null) {
+  const [data, setData] = useState<T | null>(initial);
   const [error, setError] = useState<unknown>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [tick, setTick] = useState(0);

@@ -1,13 +1,14 @@
 "use client";
 // Small presentational pieces shared by the views.
 import { useEffect, useId, useState, type ReactNode } from "react";
-import type { VaultStatus } from "@/lib/api";
+import { TAG_OF, tagLabel, type Outcome } from "@/lib/outcome";
 import { explorerAddress, explorerTx } from "@/lib/config";
-import { formatCountdown } from "@/lib/countdown";
+import { formatTimeLeft } from "@/lib/countdown";
 import { formatUsdc } from "@/lib/usdc";
 
-export function StatusBadge({ status }: { status: VaultStatus }) {
-  return <span className={`tag tag-${status}`}>{status[0].toUpperCase() + status.slice(1)}</span>;
+export function StatusBadge({ outcome }: { outcome: Outcome }) {
+  const tag = TAG_OF[outcome];
+  return <span className={`tag tag-${tag}`}>{tagLabel(tag)}</span>;
 }
 
 export const Usdc = ({ micro }: { micro: number | bigint }) => (
@@ -44,7 +45,7 @@ export function Countdown({ secondsLeft }: { secondsLeft: number }) {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  return <span className="tabular-nums">{formatCountdown(secondsLeft - Math.floor((now - start) / 1000))}</span>;
+  return <span className="tabular-nums">{formatTimeLeft(secondsLeft - Math.floor((now - start) / 1000))}</span>;
 }
 
 export const Loading = ({ show }: { show: boolean }) =>

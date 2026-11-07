@@ -28,7 +28,7 @@ export default function StudentPage() {
         <ul className="listing">
           {vaults.data?.map((v) => (
             <li key={v.vault} className="flex flex-wrap items-baseline gap-3">
-              <StatusBadge status={v.status} />
+              <StatusBadge outcome={outcomeOf(v.status, v.contributors)} />
               <Link className="link break-words text-sm" href={`/vault/${v.vault}`}>Deposit for {displayName(v.university)}</Link>
               <span className="text-sm">
                 {OUTCOME_TEXT[outcomeOf(v.status, v.contributors)].title}. <Usdc micro={v.total_contributed} /> of{" "}

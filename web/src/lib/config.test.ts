@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { httpUrl, parseShowcase } from "./config";
+import { httpUrl, parseShowcase, showcaseNote } from "./config";
 
 const ID = "6p3YF6s88hUk6t2mtNQ792gDBkMUxQxYRTCYafqGj8JE";
+
+describe("showcaseNote", () => {
+  it("names the outcome from the label", () => {
+    expect(showcaseNote("Released")).toBe("Visa issued, deposit paid to the university.");
+    expect(showcaseNote("Fully funded, released")).toBe("Visa issued, deposit paid to the university.");
+    expect(showcaseNote("Refunded")).toBe("Visa refused, every funder repaid.");
+    expect(showcaseNote("Open, still raising")).toBe("Every payment, the decision and where the money went.");
+  });
+});
 
 describe("parseShowcase", () => {
   it("is empty when unset", () => {

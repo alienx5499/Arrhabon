@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { PROGRAM_ID, explorerAddress } from "@/lib/config";
+import { PROGRAM_ID, UNIVERSITIES, explorerAddress } from "@/lib/config";
 import { Mark } from "./Mark";
+
+const university = UNIVERSITIES[0];
 
 /** Site directory: the same pages and facts the app already exposes. */
 export function Footer() {
@@ -23,7 +25,16 @@ export function Footer() {
         </nav>
         <div>
           <p className="label label-accent mb-2">Funders and universities</p>
-          <p className="muted">Funders open the vault link the student shares. Universities open /university/&lt;their address&gt;.</p>
+          <p className="muted">Funders open the vault link the student shares.</p>
+          {university ? (
+            <p className="mt-1">
+              <Link className="link inline-block py-1" href={`/university/${encodeURIComponent(university.address)}`}>
+                See a university&apos;s page
+              </Link>
+            </p>
+          ) : (
+            <p className="muted">Universities: open your page from the link we send you.</p>
+          )}
         </div>
         <div>
           <p className="label label-accent mb-2">Program</p>

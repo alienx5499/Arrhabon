@@ -66,6 +66,13 @@ export function parseShowcase(raw: string | undefined): ShowcaseVault[] {
   });
 }
 
+/** Card subtitle for a showcase vault, chosen from the words in its label. */
+export function showcaseNote(label: string): string {
+  if (/refund/i.test(label)) return "Visa refused, every funder repaid.";
+  if (/releas|paid|issued/i.test(label)) return "Visa issued, deposit paid to the university.";
+  return "Every payment, the decision and where the money went.";
+}
+
 /** An optional public http(s) link from env; unset is "", any other scheme fails loudly. */
 export function httpUrl(raw: string | undefined, name: string): string {
   const url = raw?.trim() ?? "";

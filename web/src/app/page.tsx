@@ -1,10 +1,22 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArtSlot } from "@/components/ArtSlot";
-import { DEMO_VIDEO_URL, REPO_URL, SHOWCASE_VAULTS, UNIVERSITIES } from "@/lib/config";
+import type { Vault } from "@/lib/api";
+import { API_URL, DEMO_VIDEO_URL, REPO_URL, SHOWCASE_VAULTS, UNIVERSITIES, showcaseNote } from "@/lib/config";
+import { formatUsdc } from "@/lib/usdc";
 import "./landing.css";
 
 const vaultHref = (id: string) => `/vault/${encodeURIComponent(id)}`;
+
+/** A showcase vault's target, read once at build; null when the API is unreachable then, so the card just omits it. */
+async function targetOf(id: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_URL}/vaults/${encodeURIComponent(id)}`, { cache: "force-cache", signal: AbortSignal.timeout(3000) });
+    return res.ok ? `${formatUsdc(((await res.json()) as Vault).target)} USDC` : null;
+  } catch {
+    return null;
+  }
+}
 const university = UNIVERSITIES[0];
 const liveVaultHref = SHOWCASE_VAULTS[0] ? vaultHref(SHOWCASE_VAULTS[0].id) : "#see-it-work";
 
@@ -53,7 +65,8 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const targets = await Promise.all(SHOWCASE_VAULTS.map((v) => targetOf(v.id)));
   return (
     <div className="lp">
       <section className="lp-hero" aria-labelledby="hero-title">
@@ -75,6 +88,7 @@ export default function Home() {
           ratio="16 / 9"
           sizes="(max-width: 760px) 100vw, 60vw"
           priority
+          drawing="gateway"
         />
       </section>
 
@@ -100,6 +114,7 @@ export default function Home() {
           alt="Five scenes in a row: a student sets down a glass jar, three homes send coins into it, a sealed letter arrives, a coin rolls through the gateway, and coins return to each home."
           ratio="3 / 1"
           sizes="(max-width: 1240px) 100vw, 1200px"
+          drawing="steps"
         />
         <ol className="lp-steps">
           {STEPS.map((s) => (
@@ -126,11 +141,12 @@ export default function Home() {
       <section className="lp-section" id="see-it-work" aria-labelledby="see-title">
         <h2 id="see-title">See it work</h2>
         <ul className="lp-cards">
-          {SHOWCASE_VAULTS.map((v) => (
+          {SHOWCASE_VAULTS.map((v, i) => (
             <li key={v.id}>
               <Link className="lp-card" href={vaultHref(v.id)}>
                 <span className="lp-card-title">{v.label} vault</span>
-                <span className="lp-card-note">Every payment, the decision and where the money went.</span>
+                <span className="lp-card-note">{showcaseNote(v.label)}</span>
+                {targets[i] && <span className="lp-card-note tabular-nums">Target {targets[i]}</span>}
               </Link>
             </li>
           ))}
