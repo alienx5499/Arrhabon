@@ -1,0 +1,56 @@
+/* The annotated vault page on the landing: notes either side of a true-size sample panel. */
+.plate { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+.plate h2 { grid-column: 1 / span 4; grid-row: 1; align-self: start; text-align: right; font-size: var(--text-h1); line-height: 0.95; }
+.plate-notes { grid-row: 1; position: relative; }
+.plate-notes-l { grid-column: 1 / span 4; }
+.plate-notes-r { grid-column: 9 / -1; }
+.plate-note { position: absolute; width: 100%; max-width: 26ch; margin: -0.4rem -0.6rem; padding: 0.4rem 0.6rem; border-radius: 4px; transition: background-color 180ms ease; }
+.plate-notes-l .plate-note { right: 0; text-align: right; }
+.plate-note h3 { font: 500 var(--text-body) / 1.3 var(--font-text); letter-spacing: -0.01em; }
+.plate-note p { margin-top: 0.3rem; font-size: var(--text-small); color: var(--color-mid); }
+.plate-note:hover { background: var(--color-surface); }
+.plate-panel { grid-column: 5 / span 4; grid-row: 1; display: flex; flex-direction: column; align-items: center; margin: 0; }
+.plate-panel figcaption { margin-top: var(--space-3); font-size: var(--text-small); color: var(--color-mid); }
+
+/* the sample panel, drawn with the product's own sizes */
+.vp { width: 384px; max-width: 100%; padding: 24px; border-radius: 8px; background: #fffdf8; font-size: 15px; line-height: 1.45; }
+.vp-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.vp-title b { font-weight: 500; font-size: 17px; }
+.vp-raised { margin-top: 20px; font: 900 40px / 1 var(--font-display); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.vp-of { margin-top: 6px; color: var(--color-mid); }
+.vp-meter { margin-top: 14px; height: 10px; border-radius: 999px; background: var(--color-surface); overflow: hidden; }
+.vp-meter i { display: block; width: 60%; height: 100%; border-radius: 999px; background: var(--color-accent); transform-origin: left; }
+.vp dl { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vp dt { font-size: 14px; color: var(--color-mid); }
+.vp dd { font-weight: 500; }
+.vp-add { margin-top: 22px; padding: 16px; border-radius: 8px; background: var(--color-surface); }
+.vp-add b { display: block; font-weight: 500; }
+.vp-row { margin-top: 10px; display: flex; gap: 8px; }
+.vp-input { flex: 1; display: flex; align-items: center; height: 44px; padding: 0 14px; border: 1px solid #cfc9b8; border-radius: 999px; background: #fffdf8; }
+.vp-pay { display: flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 999px; background: var(--color-accent); font-weight: 500; }
+.vp-add small { display: block; margin-top: 8px; font-size: 13px; color: var(--color-mid); }
+.vp table { margin-top: 20px; font-size: 14px; }
+.vp th { padding: 6px 0; font-weight: 400; color: var(--color-mid); border-bottom: 1px solid #ddd7c6; }
+.vp td { padding: 8px 0; border-top: 0; border-bottom: 1px solid #ebe6d8; }
+.vp .r { text-align: right; }
+.vp-acct { margin-top: 16px; display: flex; justify-content: space-between; font-size: 14px; }
+.vp-acct u { font-weight: 500; text-underline-offset: 3px; }
+.vp [data-part] { border-radius: 6px; outline: 3px solid transparent; outline-offset: 3px; transition: outline-color 180ms ease; }
+/* Hovering a note rings the part it explains. */
+.plate:has(.plate-note[data-for="raised"]:hover) [data-part="raised"],
+.plate:has(.plate-note[data-for="deadline"]:hover) [data-part="deadline"],
+.plate:has(.plate-note[data-for="add"]:hover) [data-part="add"],
+.plate:has(.plate-note[data-for="paid"]:hover) [data-part="paid"],
+.plate:has(.plate-note[data-for="proof"]:hover) [data-part="proof"],
+.plate:has(.plate-note[data-for="attestor"]:hover) [data-part="attestor"] { outline-color: var(--color-accent); }
+
+@media (max-width: 1080px) {
+  .plate { display: block; }
+  .plate h2 { text-align: left; }
+  .plate-panel { margin-top: var(--space-6); align-items: flex-start; }
+  .plate-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.75rem; }
+  .plate-note, .plate-notes-l .plate-note { position: static; max-width: none; margin: 0; padding: 0; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plate-note, .vp [data-part] { transition: none; }
+}

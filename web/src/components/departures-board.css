@@ -1,0 +1,34 @@
+/* Departures board: navy lines on the night frame; the open line turns gold and shows the rule. */
+.board { display: grid; gap: 4px; margin-top: var(--space-7); padding-inline: 0.75rem; }
+.board ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.board-head, .board button { display: grid; grid-template-columns: 5fr 3fr 3fr 2fr; gap: var(--gutter); align-items: center; text-align: left; padding-inline: 1.25rem; }
+.board-head { padding-bottom: var(--space-2); font-size: var(--text-small); color: var(--color-soft-on-field); }
+.board-cut { height: 36px; background: var(--color-field); }
+.board li { background: var(--color-field); color: var(--color-on-field); transition: background-color 180ms ease; }
+.board li:hover { background: #2a3657; }
+.board button {
+  width: 100%; min-height: 72px; border: 0; background: none; color: inherit; cursor: pointer;
+  font: 500 var(--text-lead) / 1.25 var(--font-text); letter-spacing: -0.01em;
+}
+.board button:focus-visible { outline: 3px solid var(--color-accent); outline-offset: -3px; }
+.board-st { justify-self: end; min-width: 7.5rem; padding: 0.55rem 0.9rem; text-align: center; font-size: var(--text-small); }
+.board-st-paid { background: var(--status-released-bg); color: var(--status-released-fg); }
+.board-st-refund { background: var(--status-refunding-bg); color: var(--status-refunding-fg); }
+.board-st-none { background: var(--status-closed-bg); color: var(--status-closed-fg); }
+.board-detail { max-width: 62ch; margin: 0; padding: 0 1.25rem 1.75rem; line-height: 1.5; }
+.board li.is-open { background: var(--color-accent); color: var(--color-on-accent); min-height: 216px; display: grid; align-content: center; }
+.board li.is-open button:focus-visible { outline-color: var(--color-ink); }
+
+@media (max-width: 760px) {
+  .board { padding-inline: 0.5rem; }
+  .board-head { display: none; }
+  .board button { grid-template-columns: 1fr auto; column-gap: var(--space-3); min-height: 64px; padding: 0.75rem 1rem; font-size: 1.125rem; }
+  .board-who, .board-to { display: none; }
+  .board-st { grid-row: 1; grid-column: 2; }
+  .board li.is-open { min-height: 200px; }
+  .board li.is-open :is(.board-who, .board-to) { display: block; grid-column: 1; grid-row: auto; font-size: 1rem; }
+  .board-detail { padding-inline: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board li { transition: none; }
+}

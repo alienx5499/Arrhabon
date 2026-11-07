@@ -1,49 +1,45 @@
 import Link from "next/link";
-import { PROGRAM_ID, UNIVERSITIES, explorerAddress } from "@/lib/config";
-import { Mark } from "./Mark";
+import { DEMO_VIDEO_URL, PROGRAM_ID, REPO_URL, SHOWCASE_VAULTS, UNIVERSITIES, explorerAddress, shortAddress } from "@/lib/config";
 
 const university = UNIVERSITIES[0];
 
-/** Site directory: the same pages and facts the app already exposes. */
+/** Site directory on navy, ending on the name set across the full width. */
 export function Footer() {
   return (
-    <footer className="footer">
-      <div className="wrap directory">
-        <div>
-          <p className="footer-brand">
-            <Mark size={32} />
-            Arrhabon
-          </p>
-          <p className="muted mt-3">Runs on Solana devnet with test money (tUSD).</p>
-        </div>
-        <nav aria-label="Directory">
-          <p className="label label-accent mb-2">Pages</p>
-          <ul className="flex flex-col">
-            <li><Link className="link inline-block py-1" href="/">Home</Link></li>
-            <li><Link className="link inline-block py-1" href="/student">Student: open a vault</Link></li>
-          </ul>
-        </nav>
-        <div>
-          <p className="label label-accent mb-2">Funders and universities</p>
-          <p className="muted">Funders open the vault link the student shares.</p>
-          {university ? (
-            <p className="mt-1">
-              <Link className="link inline-block py-1" href={`/university/${encodeURIComponent(university.address)}`}>
-                See a university&apos;s page
-              </Link>
-            </p>
-          ) : (
-            <p className="muted">Universities: open your page from the link we send you.</p>
-          )}
-        </div>
-        <div>
-          <p className="label label-accent mb-2">Program</p>
-          <p>
-            <a className="link font-mono" href={explorerAddress(PROGRAM_ID)} target="_blank" rel="noreferrer">
-              {PROGRAM_ID.slice(0, 4)}…{PROGRAM_ID.slice(-4)} (devnet explorer)
+    <footer className="foot">
+      <div className="wrap">
+        <div className="foot-cols">
+          <div>
+            <span>The name</span>
+            <span>Arrhabon is the ancient Greek word for earnest money: a deposit returned or kept by fixed rules.</span>
+          </div>
+          <nav aria-label="Directory">
+            <span>Pages</span>
+            <Link href="/#how-it-works">How it works</Link>
+            <Link href="/#where-it-can-go">Where it can go</Link>
+            <Link href="/student">Open a vault</Link>
+            {SHOWCASE_VAULTS.map((v) => (
+              <Link key={v.id} href={`/vault/${encodeURIComponent(v.id)}`}>{v.label} vault</Link>
+            ))}
+            {university && <Link href={`/university/${encodeURIComponent(university.address)}`}>A university&apos;s page</Link>}
+            {DEMO_VIDEO_URL && <a href={DEMO_VIDEO_URL}>Watch the demo</a>}
+          </nav>
+          <div>
+            <span>Program</span>
+            <a className="font-mono" href={explorerAddress(PROGRAM_ID)} target="_blank" rel="noreferrer">
+              {shortAddress(PROGRAM_ID)} on devnet
             </a>
-          </p>
-          <p className="muted mt-1">The visa attestor is the one trusted party.</p>
+            {REPO_URL && <a href={REPO_URL}>The code</a>}
+            <span>Not audited. The visa attestor is the one trusted party.</span>
+          </div>
+        </div>
+        <div className="foot-name">
+          <svg viewBox="0 0 1000 200" role="img" aria-label="Arrhabon">
+            <text x="0" y="168" fontWeight="900" fontSize="232" textLength="1000" lengthAdjust="spacingAndGlyphs" style={{ fontFamily: "var(--font-display)" }}>
+              Arrhabon
+            </text>
+          </svg>
+          <p className="foot-legal">Runs on Solana devnet with test money (tUSD). Illustrations are the project&apos;s own.</p>
         </div>
       </div>
     </footer>

@@ -1,0 +1,223 @@
+/* Shell: page frame, header, footer, the navy chapter and the shared type classes. */
+@layer components {
+  /* Shell */
+  .wrap {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .skip-link {
+    position: absolute;
+    left: var(--space-4);
+    top: -100px;
+    z-index: 50;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-control);
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .skip-link:focus {
+    top: var(--space-4);
+  }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    padding-block: var(--space-5);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-right: auto;
+    font: var(--weight-display) 1.375rem/1 var(--font-display);
+    letter-spacing: var(--tracking-display);
+    color: inherit;
+    text-decoration: none;
+  }
+  .site-links {
+    display: flex;
+    gap: var(--space-6);
+  }
+  .site-links a {
+    color: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .site-links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .account {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-small);
+  }
+  .account:empty {
+    display: none;
+  }
+  .site-links a, .site-nav .btn {
+    white-space: nowrap;
+  }
+  /* the smallest phones keep the wordmark and the button on one line */
+  @media (max-width: 440px) {
+    .net-tag {
+      display: none;
+    }
+    .site-nav {
+      column-gap: var(--space-4);
+    }
+    .site-nav .btn {
+      padding-inline: var(--space-4);
+    }
+  }
+  @media (max-width: 900px) {
+    .site-links {
+      display: none;
+    }
+  }
+  @media (max-width: 760px) {
+    .site-nav .header-action {
+      display: none;
+    }
+    .site-nav {
+      padding-block: var(--space-4);
+    }
+  }
+  .net-tag {
+    padding: 0.2em 0.55em;
+    border-radius: 999px;
+    background: var(--status-open-bg);
+    color: var(--color-ink);
+    font: 600 0.6875rem/1.2 var(--font-text);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  /* Footer: navy, four columns, then the name across the full width. */
+  .foot { margin-top: var(--space-9); display: flex; background: var(--color-night); color: var(--color-on-field); }
+  .foot > .wrap { display: grid; grid-template-rows: auto 1fr auto; gap: var(--space-8); padding-block: var(--space-7) var(--space-5); }
+  body:has(.lp-home) .foot { margin-top: 0; min-height: 78svh; }
+  .foot-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6) var(--gutter); }
+  .foot-cols > * > * { display: block; }
+  .foot-cols > * > :first-child { font-weight: 500; }
+  .foot-cols > * > :not(:first-child) { margin-top: 0.35rem; color: var(--color-soft-on-field); }
+  .foot a { color: var(--color-on-field); text-underline-offset: 3px; }
+  .foot :focus-visible { outline-color: var(--color-on-field); }
+  .foot-name { grid-row: 3; }
+  .foot-name svg { display: block; width: 100%; height: auto; fill: currentColor; }
+  .foot-legal { margin-top: var(--space-4); font-size: var(--text-small); color: var(--color-soft-on-field); }
+  @media (max-width: 760px) { .foot-cols { grid-template-columns: 1fr 1fr; } }
+
+  /* The navy chapter: full-bleed background painted past the wrap without widening the page. */
+  .field {
+    background: var(--color-field);
+    border-image: conic-gradient(var(--color-field) 0 0) fill 0 // 0 100vw;
+    color: var(--color-on-field);
+    padding-block: var(--space-9);
+  }
+  .field :is(h3, .field-accent) {
+    color: var(--color-field-accent);
+  }
+  .field :focus-visible {
+    outline-color: var(--color-on-field);
+  }
+
+  /* Type */
+  .display {
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: var(--text-display);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+  .headline,
+  .page-title {
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: var(--text-h1);
+    line-height: 1.05;
+    letter-spacing: var(--tracking-display);
+  }
+  .lead {
+    font-size: var(--text-lead);
+    line-height: 1.45;
+    max-width: 40ch;
+  }
+  /* Sentence-case small text; replaces the old caps labels. */
+  .label {
+    font-size: var(--text-small);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-mid);
+  }
+  .label-accent {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .story {
+    max-width: var(--measure);
+  }
+  .compact {
+    font-size: var(--text-small);
+  }
+  .muted {
+    color: var(--color-mid);
+  }
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  /* Former rules: spacing only, no lines. */
+  .rule-section {
+    padding-top: var(--space-6);
+  }
+  .rule-hair {
+    padding-top: var(--space-3);
+  }
+
+  /* Column spread: stacked below 700px, equal columns (or --cols) above. */
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+  @media (min-width: 700px) {
+    .cols {
+      grid-template-columns: var(--cols, none);
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+    .cols.lead {
+      --cols: minmax(0, 2fr) minmax(0, 1fr);
+      font-size: inherit;
+      max-width: none;
+    }
+  }
+  @media (min-width: 1100px) {
+    .cols.lead {
+      --cols: minmax(0, 7fr) minmax(0, 4fr);
+    }
+  }
+
+  /* Facts: small caption over a figure. */
+  .fact {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-1);
+  }
+  .fact-figure {
+    font-family: var(--font-text);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+}

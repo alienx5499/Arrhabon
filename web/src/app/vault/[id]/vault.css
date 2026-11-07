@@ -1,0 +1,88 @@
+/* Vault page: navy board header, the raised figure beside a sticky pay panel, then the ledger and the record. */
+.vault { max-width: 1180px; margin-inline: auto; }
+
+/* the board for this one deposit */
+.vboard { display: grid; gap: 4px; padding: 4px; border-radius: 8px; background: var(--color-night); color: var(--color-on-field); }
+.vboard-title { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); padding: 22px 24px; border-radius: 4px; background: var(--color-field); }
+.vboard h1 { font-size: clamp(1.5rem, 1.2rem + 0.9vw, 2rem); line-height: 1; }
+.vboard .tag { padding: 8px 16px; border-radius: 4px; font-weight: 500; }
+.vboard-facts { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin: 0; }
+.vboard-facts div { padding: 14px 24px; border-radius: 4px; background: var(--color-field); }
+.vboard-facts dt { font-size: 14px; color: var(--color-soft-on-field); }
+.vboard-facts dd { margin: 2px 0 0; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* figure, pay panel and the ways out; on phones the panel comes right after the figure */
+.vault-main { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); grid-template-areas: "fig side" "rest side"; grid-template-rows: auto 1fr; gap: 0 32px; align-items: start; margin-top: 32px; }
+.vault-fig { grid-area: fig; }
+.vault-rest { grid-area: rest; min-width: 0; }
+.vault-big { font: 900 clamp(3rem, 2rem + 3.4vw, 5.5rem) / 0.9 var(--font-display); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.vault-big small { margin-left: 0.2em; font-size: 0.42em; letter-spacing: -0.02em; }
+.vault-of { margin-top: 10px; max-width: 60ch; }
+.vault .bar { margin-top: 18px; background: var(--color-surface); }
+.vault-story { margin-top: var(--space-4); max-width: 60ch; }
+
+.vault-side { grid-area: side; position: sticky; top: 24px; min-width: 0; padding: 24px; border-radius: 8px; background: var(--color-surface); }
+.vault-side h2, .vault-exits h2, .funders h2, .vault-lower h2 { font-size: 24px; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
+.vault-side .note { margin-top: 14px; font-size: var(--text-small); }
+.pay-form { display: flex; flex-direction: column; }
+.pay-form label { margin-top: var(--space-4); font-size: var(--text-small); font-weight: 500; }
+.amount-field { display: flex; align-items: center; height: 52px; margin-top: var(--space-2); padding: 0 18px; border: 1px solid var(--color-mid); border-radius: 999px; background: #fffdf8; }
+.amount-field:focus-within { outline: var(--focus-ring); outline-offset: 2px; }
+.amount-field input { flex: 1; min-width: 0; border: 0; background: none; font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; outline: none; }
+.amount-field span { font-size: var(--text-small); color: var(--color-mid); }
+.pay-form .hint { margin-top: var(--space-2); font-size: 14px; color: var(--color-mid); }
+.pay-form .pay { margin: var(--space-4) 0 var(--space-2); width: 100%; min-height: 52px; font-weight: 500; font-size: 17px; }
+.pay-form .pay:hover:not(:disabled) { background: var(--color-ink); color: var(--color-paper); }
+.vault-side .mine { margin-top: 22px; padding-top: 18px; border-top: 1px solid #d8d1bf; font-size: var(--text-small); }
+.vault-side .mine b { display: block; font-size: 17px; font-weight: 500; }
+
+.vault-exits { margin-top: 40px; }
+.vault-exits-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4); margin-top: var(--space-4); }
+.vault-exits figure { margin: 0; max-width: 560px; }
+.vault-exit-art { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 8px; }
+.vault-exit-art img { object-fit: cover; }
+.vault-exit-issued img { object-position: 75% 60%; }
+.vault-exit-refused img { object-position: 30% 70%; }
+.vault-exits figcaption { margin-top: 10px; font-size: var(--text-small); }
+.vault-exits figcaption b { display: block; margin-bottom: 2px; font-size: 17px; font-weight: 500; }
+
+/* who has paid */
+.funders { margin-top: var(--space-7); }
+.funders table { margin-top: var(--space-3); font-size: 16px; }
+.funders th { padding: 10px 12px; font-size: 14px; font-weight: 400; border-bottom: 1px solid #d8d1bf; }
+.funders td { height: 56px; padding: 0 12px; border-top: 0; border-bottom: 1px solid #e6e0d0; }
+.funders tfoot td { font-weight: 500; border-bottom: 0; }
+.funders tbody tr:hover { background: var(--color-surface); }
+.funders .r { text-align: right; }
+.funders td .tag { white-space: normal; }
+.funders .row-tag { margin-top: var(--space-2); }
+
+/* the record: transactions beside the details */
+.vault-lower { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 32px; margin-top: var(--space-7); }
+.vault-lower .card { padding: 0; background: none; }
+.vault-lower .section-head { margin-bottom: 0; }
+.vault-lower .listing { margin-top: var(--space-3); }
+.vault-lower .listing > * { justify-content: space-between; border-top: 0; border-bottom: 1px solid #e6e0d0; padding-block: 14px; }
+.vault-details .listing-row { grid-template-columns: minmax(0, 1fr) auto; }
+.vault-details dd { margin: 0; font-weight: 500; text-align: right; }
+.quote-toggle summary { cursor: pointer; font-weight: 600; padding-block: var(--space-2); }
+
+@media (min-width: 700px) {
+  .funders .row-tag { display: none; }
+}
+@media (max-width: 699px) {
+  .hide-sm { display: none; }
+}
+@media (max-width: 900px) {
+  .vault-main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "fig" "side" "rest"; gap: 0; margin-top: 20px; }
+  .vault-side { position: static; margin-top: 20px; padding: 18px; }
+  .vault-side .pay-form label { margin-top: var(--space-3); }
+  .vault-rest { margin-top: var(--space-6); }
+  .vault-lower { grid-template-columns: minmax(0, 1fr); }
+  .vboard-title { padding: 14px 16px; align-items: flex-start; }
+  .vboard h1 { font-size: 1.375rem; }
+  .vboard-facts { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+  .vboard-facts div { padding: 8px 16px; }
+  .vault-side h2 { font-size: 22px; }
+  .funders :is(td, th) { padding-inline: 6px; }
+}

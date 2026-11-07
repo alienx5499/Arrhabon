@@ -1,144 +1,140 @@
-/* Landing and 404. Bell Jar tokens from globals.css; the fallbacks below are the same values. */
-.lp {
-  --lp-paper: var(--color-paper, #f7f5f0);
-  --lp-surface: var(--color-surface, #ece8dd);
-  --lp-ink: var(--color-ink, #151d30);
-  --lp-mid: var(--color-mid, #4a5268);
-  --lp-accent: var(--color-accent, #e0a526);
-  --lp-on-accent: var(--color-on-accent, #151d30);
-  --lp-field: var(--color-field, #1f2a44);
-  --lp-on-field: var(--color-on-field, #f7f5f0);
-  --lp-field-accent: var(--color-field-accent, #e0a526);
-  --lp-display: var(--font-display, "Newsreader", Georgia, serif);
-  --lp-text: var(--font-text, "Public Sans", system-ui, sans-serif);
-  --lp-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
-  color: var(--lp-ink);
-  font: 400 var(--text-body, 1.125rem) / var(--leading-body, 1.55) var(--lp-text);
-}
-.lp h1, .lp h2, .lp h3 {
-  font-family: var(--lp-display);
-  font-weight: var(--weight-display, 600);
-  letter-spacing: var(--tracking-display, -0.025em);
-  line-height: var(--leading-heading, 1.15);
-  text-wrap: balance;
-  margin: 0;
-}
-.lp p { margin: 0; max-width: var(--measure, 64ch); text-wrap: pretty; }
-.lp a:not(.lp-btn, .lp-card) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-.lp a:focus-visible, .lp summary:focus-visible { outline: var(--focus-ring, 3px solid var(--lp-ink)); outline-offset: 3px; }
+/* Landing (a travel poster, then a departures board) and the 404. Tokens from globals.css. */
+.lp { color: var(--color-ink); }
+.lp h1, .lp h2, .lp h3 { margin: 0; }
+.lp p { margin: 0; max-width: var(--measure); }
+.lp a:not(.lp-btn, .lp-go) { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+/* The home page runs edge to edge: it steps out of the column and the column's top and bottom padding. */
+.lp-home { margin: -2rem calc(50% - 50vw); }
+.lp-wrap { padding-inline: var(--gutter); }
+.lp-home :is(h2, .lp-stairs h3, .lp-plate h2) { font-size: var(--text-h1); line-height: 0.95; }
 
 /* buttons: one gold action, one quiet */
 .lp-btn {
-  display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 var(--space-5, 24px);
-  border-radius: var(--radius-control, 999px); font: 600 1rem/1 var(--lp-text); text-decoration: none;
-  transition: transform var(--dur-press, 120ms) var(--lp-ease);
+  display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 1.6rem;
+  border-radius: var(--radius-control); font: 500 1rem/1 var(--font-text); text-decoration: none;
+  transition: transform var(--dur-press) var(--ease-out), background-color 180ms ease, color 180ms ease;
 }
 .lp-btn:active { transform: scale(0.97); }
-.lp-btn-primary { background: var(--lp-accent); color: var(--lp-on-accent); }
-.lp-btn-quiet { background: var(--lp-surface); color: var(--lp-ink); }
+.lp-btn-primary { background: var(--color-accent); color: var(--color-on-accent); }
+.lp-btn-primary:hover { background: var(--color-ink); color: var(--color-paper); }
+.lp-btn-quiet { background: var(--color-surface); color: var(--color-ink); }
+.lp-lead { font-size: var(--text-lead); max-width: 40ch; }
+.lp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) 1.75rem; margin-top: var(--space-6); }
+.lp .lp-text-link { font-weight: 500; }
 
-/* hero: headline across, copy left, picture right */
-.lp-hero {
-  display: grid; grid-template-columns: 5fr 7fr; column-gap: var(--space-7, 48px); row-gap: var(--space-6, 32px);
-  align-items: start; padding-block: var(--space-7, 48px) var(--space-9, 96px);
-}
-.lp-hero h1 { grid-column: 1 / -1; font-size: clamp(2.75rem, 1rem + 7.2vw, 8.5rem); line-height: var(--leading-display, 0.98); }
-.lp-lead { font-size: var(--text-lead, clamp(1.1875rem, 1rem + 0.6vw, 1.5rem)); }
-.lp-hero .lp-lead { max-width: 34ch; }
-.lp-actions { display: flex; flex-wrap: wrap; gap: var(--space-3, 12px); margin-top: var(--space-6, 32px); }
+/* hero: the poster, a line in its sky */
+.lp-hero { position: relative; display: grid; grid-template-rows: auto 1fr; min-height: max(calc(100svh - 7.5rem), 40rem); overflow: hidden; }
+.lp-hero-copy { position: relative; z-index: 2; display: grid; justify-items: center; padding: clamp(2rem, 5vh, 4rem) var(--gutter) 0; text-align: center; }
+.lp-hero h1 { font-size: var(--text-display); line-height: 0.88; letter-spacing: -0.045em; }
+.lp-lines > span { display: block; overflow: hidden; padding-block: 0.16em 0.08em; margin-block: -0.16em -0.08em; }
+.lp-lines > span > span { display: block; }
+.lp .lp-sub { margin-top: 2.25rem; font-size: var(--text-lead); line-height: 1.4; max-width: 34em; text-wrap: balance; }
+.lp-hero .lp-actions { justify-content: center; margin-top: var(--space-6); }
+.lp-poster { position: absolute; inset: auto 0 0; z-index: 1; }
+/* A mask, not a colour: it feathers the art's paper into the page paper. */
+.lp-poster img { display: block; width: 100%; height: auto; transform-origin: 70% 100%; mask-image: linear-gradient(transparent, #000 14%, #000 84%, transparent); }
 
-/* the field chapter: full bleed navy painted outside the column without widening the page */
-.lp-field {
-  color: var(--lp-on-field); padding-block: var(--space-9, 96px);
-  border-image: linear-gradient(var(--lp-field), var(--lp-field)) fill 0 / 0 / 0 100vw;
-}
-.lp-field h2 { font-size: var(--text-h1, clamp(2.25rem, 1.4rem + 3.2vw, 4.5rem)); max-width: 26ch; }
-.lp-exits { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7, 48px); margin-top: var(--space-7, 48px); }
-.lp-exits h3 { font-size: var(--text-h2, clamp(1.625rem, 1.2rem + 1.6vw, 2.5rem)); color: var(--lp-field-accent); }
-.lp-exits p { margin-top: var(--space-3, 12px); font-size: var(--text-lead, 1.25rem); }
+/* the problem */
+.lp-problem { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); row-gap: 2.5rem; align-items: end; padding-top: var(--section); }
+.lp-problem-copy { grid-column: 1 / span 5; }
+.lp-problem-copy > p { margin-top: var(--space-5); }
+.lp-problem-copy > .lp-figure { margin-top: 2.5rem; }
+.lp-figure b { display: block; font: 900 var(--text-display) / 0.85 var(--font-display); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.lp-figure span { display: block; margin-top: var(--space-3); max-width: 30ch; }
+.lp-problem figure { grid-column: 6 / -1; margin: 0; }
+.lp-problem-art:has(img) { mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent); }
+.lp figcaption { margin-top: var(--space-3); font-size: var(--text-small); color: var(--color-mid); }
 
-/* plain sections */
-.lp-section { padding-top: var(--space-9, 96px); }
-.lp-section > h2 { font-size: var(--text-h2, clamp(1.625rem, 1.2rem + 1.6vw, 2.5rem)); }
-.lp-how-art { margin-top: var(--space-6, 32px); }
-.lp-steps {
-  list-style: none; counter-reset: step; padding: 0; margin: var(--space-6, 32px) 0 0;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-5, 24px);
+/* how it works: four lines stepping right, then the five-panel strip */
+.lp-stairs { padding-block: var(--section); }
+.lp-stairs ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); row-gap: 3.5rem; }
+.lp-stairs li { grid-column: var(--from) / -1; }
+.lp-stairs li:nth-child(1) { --from: 1; }
+.lp-stairs li:nth-child(2) { --from: 3; }
+.lp-stairs li:nth-child(3) { --from: 5; }
+.lp-stairs li:nth-child(4) { --from: 7; }
+.lp-stairs li p { margin-top: 0.85rem; max-width: 38ch; }
+.lp-strip { margin-top: clamp(2.5rem, 5vw, 4.5rem); }
+/* The paper darkens slightly at the art's edges; fading all four into the page hides the box. Panels sit 1 percent from the sides and 7 percent from top and bottom. */
+.lp-strip:has(img) {
+  mask-image: linear-gradient(to right, transparent, #000 1%, #000 99%, transparent), linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent);
+  mask-composite: intersect;
 }
-.lp-steps li { counter-increment: step; }
-.lp-steps h3 { font-size: var(--text-h3, 1.375rem); }
-.lp-steps h3::before {
-  content: counter(step); display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: var(--space-3, 12px);
-  border-radius: 50%; background: var(--lp-surface); font: 600 var(--text-small, 0.9375rem)/1 var(--lp-text); letter-spacing: 0;
-}
-.lp-steps p { margin-top: var(--space-2, 8px); }
 
-/* FAQ: native disclosure, keyboard ready */
-.lp-faq { margin-top: var(--space-5, 24px); display: grid; gap: var(--space-2, 8px); max-width: 860px; }
-.lp-faq details { background: var(--lp-surface); border-radius: var(--radius-card, 4px); }
-.lp-faq summary {
-  display: flex; justify-content: space-between; align-items: center; gap: var(--space-4, 16px);
-  padding: var(--space-4, 16px) var(--space-5, 24px); cursor: pointer; list-style: none;
-  font: var(--weight-display, 600) var(--text-h3, 1.375rem)/1.3 var(--lp-display); letter-spacing: var(--tracking-display, -0.025em);
-}
-.lp-faq summary::-webkit-details-marker { display: none; }
-.lp-faq summary::after { content: "+"; font: 500 1.5rem/1 var(--lp-text); transition: transform var(--dur-press, 120ms) var(--lp-ease); }
-.lp-faq details[open] summary::after { transform: rotate(45deg); }
-.lp-faq details p { padding: 0 var(--space-5, 24px) var(--space-5, 24px); }
+/* the board chapter */
+.lp-board { padding-top: clamp(4rem, 8vw, 7rem); background: var(--color-night); color: var(--color-on-field); overflow: hidden; }
+.lp-board-intro { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); row-gap: var(--space-5); align-items: end; }
+.lp-board-intro h2 { grid-column: 1 / span 7; }
+.lp-board-intro p { grid-column: 9 / -1; }
 
-/* see it work */
-.lp-cards {
-  list-style: none; padding: 0; margin: var(--space-5, 24px) 0 0;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4, 16px);
-}
-.lp-card {
-  display: flex; flex-direction: column; gap: var(--space-2, 8px); height: 100%; padding: var(--space-5, 24px);
-  background: var(--lp-surface); border-radius: var(--radius-card, 4px); color: inherit; text-decoration: none;
-}
-.lp-card:hover .lp-card-title { text-decoration: underline; text-underline-offset: 4px; }
-.lp-card .art-slot { margin-bottom: var(--space-3, 12px); }
-.lp-card .art-slot-empty { background: var(--lp-paper); }
-.lp-card-title { font: var(--weight-display, 600) var(--text-h3, 1.375rem)/1.2 var(--lp-display); letter-spacing: var(--tracking-display, -0.025em); }
-.lp-card-note { color: var(--lp-mid); font-size: var(--text-small, 0.9375rem); }
-.lp-note { margin-top: var(--space-6, 32px); }
-.lp-note h3 { font-size: var(--text-h3, 1.375rem); }
-.lp-note p { margin-top: var(--space-2, 8px); }
+.lp-plate { padding-block: clamp(3rem, 6vw, 5rem); }
+
+/* questions, one band each, answers in view */
+.lp-qa-lead { display: flex; align-items: flex-end; min-height: 40svh; padding: 3rem var(--gutter); background: var(--color-field); color: var(--color-on-field); }
+.lp-home .lp-qa-lead h2 { font-size: var(--text-display); line-height: 0.9; }
+.lp-qa-band { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); padding: 3.5rem var(--gutter); }
+.lp-qa-band:nth-child(odd) { background: var(--color-surface); }
+.lp-home .lp-qa-band h3 { grid-column: 1 / span 5; font-size: var(--text-lead); line-height: 1.15; letter-spacing: -0.03em; }
+.lp-qa-band p { grid-column: 7 / -1; }
+
+/* one word is the button */
+.lp-go { display: grid; grid-template-rows: auto 1fr auto; min-height: 60svh; padding: var(--space-5) var(--gutter); background: var(--color-accent); color: var(--color-on-accent); text-decoration: none; }
+.lp-go:hover, .lp-go:focus-visible { background: var(--color-ink); color: var(--color-accent); outline: none; }
+.lp-go-top { display: flex; justify-content: space-between; align-items: start; gap: 2rem; }
+.lp-go-top span { max-width: 30ch; font-size: var(--text-lead); line-height: 1.35; }
+.lp-go svg { flex: none; width: 48px; height: 48px; }
+.lp-go-word { grid-row: 3; margin-bottom: 0.04em; font: 900 clamp(6rem, 25vw, 23rem) / 0.8 var(--font-display); letter-spacing: -0.06em; }
 
 /* 404 */
-.lp-lost { display: flex; flex-direction: column; min-height: 70vh; padding-top: var(--space-8, 64px); }
-.lp-lost h1 { font-size: var(--text-h1, clamp(2.25rem, 1.4rem + 3.2vw, 4.5rem)); }
-.lp-lost .lp-lead { margin-top: var(--space-4, 16px); }
+.lp-lost { display: flex; flex-direction: column; min-height: 70vh; padding-top: var(--space-8); }
+.lp-lost h1 { font-size: var(--text-h1); }
+.lp-lost .lp-lead { margin-top: var(--space-4); }
 .lp-lost-art { margin-top: auto; mask-image: linear-gradient(to bottom, transparent, #000 40%); }
-.lp-lost-art .art-slot-empty { background: transparent; place-items: end center; padding-bottom: var(--space-4, 16px); }
+.lp-lost-art .art-slot-empty { background: transparent; place-items: end center; padding-bottom: var(--space-4); }
 
 @media (max-width: 760px) {
-  .lp-hero, .lp-exits { grid-template-columns: 1fr; }
-  .lp-hero { padding-block: var(--space-4, 16px) var(--space-8, 64px); }
-  .lp-field { padding-block: var(--space-8, 64px); }
-  .lp-section { padding-top: var(--space-8, 64px); }
-  .lp-steps { grid-template-columns: 1fr; }
-}
-@media (min-width: 761px) and (max-width: 1100px) {
-  .lp-steps { grid-template-columns: repeat(3, 1fr); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lp-btn, .lp-faq summary::after { transition: none; }
+  .lp-hero { min-height: calc(100svh - 7rem); }
+  .lp-hero h1 { font-size: 13.2vw; }
+  .lp .lp-sub { margin-top: var(--space-5); }
+  .lp-poster img { height: 46svh; object-fit: cover; object-position: 80% 100%; }
+  .lp-problem-copy, .lp-problem figure, .lp-board-intro :is(h2, p) { grid-column: 1 / -1; }
+  .lp-stairs ol { display: block; }
+  .lp-stairs li { margin-left: calc((var(--from) - 1) * 3vw); }
+  .lp-stairs li + li { margin-top: 2.5rem; }
+  .lp-qa-band { display: block; padding: 2rem 1.25rem; }
+  .lp-qa-band p { margin-top: var(--space-3); }
+  .lp-qa-lead { min-height: 30svh; padding: 1.5rem 1.25rem; }
+  .lp-go { min-height: 46svh; }
+  .lp-go-word { font-size: 30vw; }
+  .lp-go svg { width: 32px; height: 32px; }
 }
 
-/* Section parts rise 24px and fade in as they scroll into view; siblings in a row follow 40px apart. None under reduced motion. */
+/* Motion: the headline rises line by line, the poster settles, section parts rise as they scroll in. None under reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
+  .lp-lines > span > span { animation: lp-line 900ms var(--ease-out) both; animation-delay: 150ms; }
+  .lp-lines > span:nth-child(2) > span { animation-delay: 260ms; }
+  .lp-sub, .lp-hero .lp-actions { animation: lp-up 800ms var(--ease-out) both 480ms; }
+  .lp-poster img { animation: lp-settle 2400ms cubic-bezier(0.33, 1, 0.68, 1) both; }
+  .lp-btn, .lp-go { transition-duration: 180ms; }
   @supports (animation-timeline: view()) {
-    .lp-field > h2, .lp-exits > *, .lp-section > :is(h2, .lp-how-art, .lp-note), .lp-steps > li, .lp-faq, .lp-cards > li {
-      animation: lp-rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0px entry 160px;
-    }
-    :is(.lp-exits, .lp-steps, .lp-cards) > :nth-child(2) { animation-range: entry 40px entry 200px; }
-    :is(.lp-steps, .lp-cards) > :nth-child(3) { animation-range: entry 80px entry 240px; }
-    .lp-steps > :nth-child(4) { animation-range: entry 120px entry 280px; }
-    .lp-steps > :nth-child(5) { animation-range: entry 160px entry 320px; }
+    .lp-rise { animation: lp-up linear both; animation-timeline: view(); animation-range: entry 0px entry 160px; }
+    .lp-stairs li:nth-child(2) { animation-range: entry 40px entry 200px; }
+    .lp-stairs li:nth-child(3) { animation-range: entry 80px entry 240px; }
+    .lp-stairs li:nth-child(4) { animation-range: entry 120px entry 280px; }
   }
 }
-@keyframes lp-rise {
-  from { opacity: 0; transform: translateY(24px); }
+@media (prefers-reduced-motion: reduce) {
+  .lp-btn { transition: none; }
 }
+@keyframes lp-line { from { transform: translateY(105%); } }
+@keyframes lp-up { from { opacity: 0; transform: translateY(24px); } }
+@keyframes lp-settle { from { transform: scale(1.06) translateY(2%); } }
+
+/* Scrolling settles on the nearest section start, only on the landing page
+   and only when the visitor allows motion. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:has(.lp-hero) { scroll-snap-type: y proximity; }
+}
+.lp-problem, .lp-stairs, .lp-board, .lp-plate, .lp-qa, .lp-go { scroll-snap-align: start; }
+:root:has(.lp-hero) header { scroll-snap-align: start; }
+:root:has(.lp-hero) .foot { scroll-snap-align: end; }

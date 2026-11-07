@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Newsreader, Public_Sans } from "next/font/google";
+import { Epilogue, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { LoginBar } from "@/components/LoginBar";
 import { Footer } from "@/components/Footer";
 
-// Bound to the --font-display / --font-text / --font-mono token stacks in globals.css.
-const display = Newsreader({ subsets: ["latin"], axes: ["opsz"], variable: "--font-newsreader" });
-const text = Public_Sans({ subsets: ["latin"], variable: "--font-public-sans" });
+// Bound to the --font-display / --font-text / --font-mono token stacks in globals.css; Epilogue is variable, 400 to 900.
+const epilogue = Epilogue({ subsets: ["latin"], variable: "--font-epilogue" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: "400", variable: "--font-plex-mono" });
 
 const description =
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${text.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" className={`${epilogue.variable} ${mono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <a href="#main" className="skip-link">Skip to content</a>
         <LoginBar />
