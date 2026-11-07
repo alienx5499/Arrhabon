@@ -9,9 +9,10 @@ Never commit a key file, and never paste a key into an environment variable. Key
 ```sh
 anchor build
 scripts/devnet_setup.sh
+scripts/register_demo_parties.sh
 ```
 
-If it stops with "The devnet faucet refused", fund the printed deployer address at https://faucet.solana.com (cluster: devnet) and rerun. When it finishes, `deploy/devnet.json` holds the public addresses (program, mint, university, attestor) used below.
+If it stops with "The devnet faucet refused", fund the printed deployer address at https://faucet.solana.com (cluster: devnet) and rerun. `scripts/register_demo_parties.sh` registers demo universities and visa attestors on chain, and prints three env lines (`NEXT_PUBLIC_UNIVERSITIES`, `NEXT_PUBLIC_ATTESTORS`, `NEXT_PUBLIC_REGISTRY_NAMES`) to paste into Vercel. When it finishes, `deploy/devnet.json` holds the public addresses (program, mint, university, attestor) used below.
 
 Give the crank key devnet SOL too; it pays the fees for `expire` and `refund`:
 
@@ -43,8 +44,10 @@ solana -C .keys/cli-config.yml balance "$(solana-keygen pubkey .keys/crank.json)
    | `NEXT_PUBLIC_API_URL` | The Render service URL, no trailing slash |
    | `NEXT_PUBLIC_SOLANA_RPC_URL` | `https://api.devnet.solana.com` (public; every `NEXT_PUBLIC_*` value ships to browsers, so no private RPC key here) |
    | `NEXT_PUBLIC_PROGRAM_ID` | Program id from `deploy/devnet.json` |
-   | `NEXT_PUBLIC_UNIVERSITIES` | Optional, `Name=address` from `deploy/devnet.json` |
-   | `NEXT_PUBLIC_ATTESTORS` | Optional, same format |
+   | `NEXT_PUBLIC_UNIVERSITIES` | `Name=address` pairs printed by `scripts/register_demo_parties.sh` |
+   | `NEXT_PUBLIC_ATTESTORS` | `Name=address` pairs printed by `scripts/register_demo_parties.sh` |
+   | `NEXT_PUBLIC_REGISTRY_NAMES` | JSON map printed by `scripts/register_demo_parties.sh` |
+   | `NEXT_PUBLIC_REPO_URL` | `https://github.com/alienx5499/Arrhabon` |
 
 4. Deploy and note the production URL, e.g. `https://arrhabon.vercel.app`.
 

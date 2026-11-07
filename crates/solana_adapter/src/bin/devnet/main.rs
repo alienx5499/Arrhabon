@@ -1,9 +1,11 @@
 //! Cluster CLI (devnet, or localnet via `ARRHABON_CLUSTER`): `setup` initialises Config and the
 //! registry, `run` drives both demo paths, `sign <party>` signs an API-built transaction,
 //! `registry <attestor|university> <pubkey> --active=<bool>` switches a registry entry,
+//! `register <university|attestor> <pubkey>` registers a new entry,
 //! `token-metadata --uri <url>` names the test mint.
 #![forbid(unsafe_code)]
 
+mod register;
 mod registry;
 mod run;
 mod setup;
@@ -89,6 +91,12 @@ async fn main() -> ExitCode {
             let (_, url) = cluster().await?;
             return registry::run(&switch, &admin, &url).await;
         }
+        if cmd == "register" {
+            let target = register::parse(&std::env::args().skip(2).collect::<Vec<_>>())?;
+            let admin = key("deployer")?;
+            let (net, url) = cluster().await?;
+            return register::run(&target, &admin, net, &url).await;
+        }
         if cmd == "token-metadata" {
             let uri = token_metadata::parse(&std::env::args().skip(2).collect::<Vec<_>>())?;
             let (deployer, mint) = (key("deployer")?, key("usdc-mint")?.pubkey());
@@ -100,7 +108,7 @@ async fn main() -> ExitCode {
             "setup" => setup::run(&keys, net, &url).await,
             "run" => run::run(keys, net, &url).await,
             _ => Err(
-                "usage: [ARRHABON_CLUSTER=localnet] devnet <setup|run|sign PARTY|registry ...|token-metadata --uri URL>"
+                "usage: [ARRHABON_CLUSTER=localnet] devnet <setup|run|sign PARTY|registry ...|register ...|token-metadata --uri URL>"
                     .into(),
             ),
         }
