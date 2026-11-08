@@ -21,3 +21,4 @@ deploy/localnet.json
 # misc
 .DS_Store
 *.log
+.vercel

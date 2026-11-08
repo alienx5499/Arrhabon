@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { api, ApiError, type MirrorGrant, type Quote, type SwapStatus } from "@/lib/api";
 import { formatDeadline } from "@/lib/countdown";
-import { isFinalStatus, mirrorErrorMessage, mirrorSuccessMessage, swapStatusMessage } from "@/lib/quote";
+import { isFinalStatus, mirrorErrorMessage, mirrorSuccessMessage, paymentUri, swapStatusMessage } from "@/lib/quote";
 import { formatUsdc } from "@/lib/usdc";
 import { TxLink, Usdc } from "./ui";
 
@@ -93,20 +94,47 @@ export function LiveDeposit({ quote, chain, asset, amount }: LiveDepositProps) {
   }
 
   const deadline = typeof quote.expires_at === "number" ? formatDeadline(quote.expires_at) : quote.expires_at;
+  const showQr = !expired && !isFinalStatus(status ?? "");
 
   return (
     <div className="mt-4 flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <span className="field-label">Deposit address</span>
-        <div className="flex flex-wrap items-center gap-3">
-          <code className="font-mono text-sm break-all">{quote.deposit_address}</code>
-          <button type="button" className="btn-secondary" onClick={copy}>
-            {copied ? "Copied" : "Copy"}
-          </button>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-1 flex-col gap-2 min-w-0">
+          <span className="field-label">Deposit address</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <code className="font-mono text-sm break-all">{quote.deposit_address}</code>
+            <button type="button" className="btn-secondary" onClick={copy}>
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <p className="text-sm">
+            Send exactly {amount} {asset} on {chain} to this address. Aurora swaps it and delivers USDC on Solana.
+          </p>
         </div>
-        <p className="text-sm">
-          Send exactly {amount} {asset} on {chain} to this address. Aurora swaps it and delivers USDC on Solana.
-        </p>
+
+        {showQr && (
+          <div className="flex flex-col items-center gap-2 self-start shrink-0">
+            <div
+              className="p-3"
+              style={{
+                backgroundColor: "#fffdf6",
+                borderRadius: "var(--radius-card)",
+                border: "1px solid var(--color-placeholder)",
+              }}
+            >
+              <QRCodeSVG
+                value={paymentUri(chain, quote.deposit_address, amount)}
+                size={200}
+                fgColor="#151d30"
+                bgColor="#fffdf6"
+                level="M"
+              />
+            </div>
+            <p className="text-sm text-center">
+              Scan with your wallet: sends {amount} USDC on {chain}
+            </p>
+          </div>
+        )}
       </div>
 
       <dl className="listing text-sm">

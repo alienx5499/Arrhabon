@@ -3,6 +3,7 @@ import {
   isFinalStatus,
   mirrorErrorMessage,
   mirrorSuccessMessage,
+  paymentUri,
   percentToBps,
   swapStatusMessage,
 } from "./quote";
@@ -71,6 +72,44 @@ describe("mirrorSuccessMessage", () => {
     expect(mirrorSuccessMessage(25500000)).toBe(
       "Swap complete. 25.50 test USDC mirrored to your devnet wallet for this vault (devnet test money; the swap itself was real on mainnet).",
     );
+  });
+});
+
+describe("paymentUri", () => {
+  const addr = "0x1234567890abcdef1234567890abcdef12345678";
+
+  it("builds EIP-681 URI for Base with integer amount", () => {
+    const uri = paymentUri("base", addr, "5");
+    expect(uri).toBe(
+      `ethereum:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913@8453/transfer?address=${addr}&uint256=5000000`,
+    );
+  });
+
+  it("builds EIP-681 URI with fractional amount", () => {
+    const uri = paymentUri("base", addr, "1.5");
+    expect(uri).toBe(
+      `ethereum:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913@8453/transfer?address=${addr}&uint256=1500000`,
+    );
+  });
+
+  it("supports Arbitrum and Ethereum configurations", () => {
+    expect(paymentUri("arb", addr, "10")).toBe(
+      `ethereum:0xaf88d065e77c8cC2239327C5EDb3A432268e5831@42161/transfer?address=${addr}&uint256=10000000`,
+    );
+    expect(paymentUri("eth", addr, "10")).toBe(
+      `ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48@1/transfer?address=${addr}&uint256=10000000`,
+    );
+  });
+
+  it("falls back to plain address when chain is unknown", () => {
+    expect(paymentUri("sol", addr, "5")).toBe(addr);
+    expect(paymentUri("unknown", addr, "5")).toBe(addr);
+  });
+
+  it("falls back to plain address when amount is invalid", () => {
+    expect(paymentUri("base", addr, "bad")).toBe(addr);
+    expect(paymentUri("base", addr, "0")).toBe(addr);
+    expect(paymentUri("base", addr, "-5")).toBe(addr);
   });
 });
 
